@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const IS_CONFIGURED = Boolean(GOOGLE_CLIENT_ID);
-const SHOW_DEMO = import.meta.env.VITE_DEMO_LOGIN === 'true';
+const SHOW_DEMO = import.meta.env.DEV;
 
 export default function Login() {
   const { user, login } = useAuth();
