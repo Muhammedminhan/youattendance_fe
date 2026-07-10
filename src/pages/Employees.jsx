@@ -13,24 +13,18 @@ function badgeInfo(status) {
   return { cls: 'badge-green', label: 'Active', ring: 'ring-green' };
 }
 
-const EMPLOYEE_LIST = Object.values(EMPS).map(e => {
+function toCard(e) {
   const { cls, label, ring } = badgeInfo(e.status);
   const totalMax = e.balance.find(b => b.name === 'Annual Leave')?.max || 20;
   return {
-    id: e.id,
-    name: e.name,
-    dept: e.dept,
-    days: e.stats.total,
-    total: totalMax,
-    status: statusKey(e.status),
-    color: e.color,
-    ringClass: ring,
-    badgeClass: cls,
-    badgeLabel: label,
+    id: e.id, name: e.name, dept: e.dept,
+    days: e.stats.total, total: totalMax,
+    status: statusKey(e.status), color: e.color,
+    ringClass: ring, badgeClass: cls, badgeLabel: label,
     types: e.balance.filter(b => b.used > 0).map(b => b.name.replace(' Leave','')).join(', '),
     barColor: e.color.replace('135deg', '90deg'),
   };
-});
+}
 
 const SORT_META = {
   'default':     { label: 'Default' },
@@ -55,7 +49,7 @@ export default function Employees() {
   if (error) return <div className="error-state">Failed to load data</div>;
 
   const sorted = useMemo(() => {
-    let list = [...EMPLOYEE_LIST];
+    let list = Object.values(EMPS).map(toCard);
     if (sortMode === 'most-leave')  list.sort((a,b) => b.days - a.days);
     else if (sortMode === 'least-leave') list.sort((a,b) => a.days - b.days);
     else if (sortMode === 'on-leave')    list.sort((a,b) => (STATUS_ORDER[a.status]??9) - (STATUS_ORDER[b.status]??9));

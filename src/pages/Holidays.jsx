@@ -77,8 +77,8 @@ export default function Holidays() {
       <div className="holidays-card g" style={{opacity:.75}}>
         <div className="sec-lbl">Past Holidays — 2026</div>
         <div className="hlist">
-          {PAST.map((h, i) => (
-            <div key={i} className="hi" style={{opacity:.65}}>
+          {PAST.map((h) => (
+            <div key={h.name} className="hi" style={{opacity:.65}}>
               <div className="hbadge" style={{background:'linear-gradient(135deg,#475569,#64748b)'}}>
                 <span className="hday">{h.day}</span>
                 <span className="hmon">{h.mon}</span>

@@ -5,26 +5,46 @@ export default function ProfileModal({ onClose }) {
   const { user, updateUser, logout, getEffectivePicture } = useAuth();
   const [name, setName] = useState(user?.name || '');
   const [previewSrc, setPreviewSrc] = useState(getEffectivePicture());
-  const [newPicData, setNewPicData] = useState(null);
+  const [newFile, setNewFile] = useState(null);
+  const [sizeWarning, setSizeWarning] = useState('');
   const fileRef = useRef();
+  const objectUrlRef = useRef(null);
 
   function handleFileChange(e) {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setPreviewSrc(ev.target.result);
-      setNewPicData(ev.target.result);
-    };
-    reader.readAsDataURL(file);
+    // Revoke previous object URL to avoid memory leak
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    // Warn if file exceeds 200 KB — localStorage has a 5 MB shared limit
+    if (file.size > 200 * 1024) {
+      setSizeWarning(`Image is ${(file.size / 1024).toFixed(0)} KB — large photos may exceed storage limits. Use a smaller image.`);
+    } else {
+      setSizeWarning('');
+    }
+    // Use object URL for preview (no base64 bloat in memory)
+    objectUrlRef.current = URL.createObjectURL(file);
+    setPreviewSrc(objectUrlRef.current);
+    setNewFile(file);
   }
 
   function handleSave() {
     const updated = { ...user };
     if (name.trim()) updated.name = name.trim();
-    if (newPicData) {
-      localStorage.setItem('yd-custom-picture', newPicData);
-      updated.picture = newPicData;
+    if (newFile) {
+      // Read as base64 only at save time — TODO: upload to server instead
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          localStorage.setItem('yd-custom-picture', ev.target.result);
+          updated.picture = ev.target.result;
+        } catch {
+          // localStorage quota exceeded — skip saving picture
+        }
+        updateUser(updated);
+        onClose();
+      };
+      reader.readAsDataURL(newFile);
+      return;
     }
     updateUser(updated);
     onClose();
@@ -51,8 +71,9 @@ export default function ProfileModal({ onClose }) {
             <img src={previewSrc} alt="" style={{width:'80px',height:'80px',borderRadius:'18px',objectFit:'cover',border:'2px solid #30363d'}}/>
             <div style={{position:'absolute',bottom:'-6px',right:'-6px',width:'26px',height:'26px',borderRadius:'8px',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'13px',border:'2px solid #161b22'}}>✏️</div>
           </div>
-          <div style={{fontSize:'11px',color:'#6e7681'}}>Click photo to change</div>
+          <div style={{fontSize:'11px',color:'#6e7681'}}>Click photo to change (max 200 KB)</div>
           <input ref={fileRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleFileChange}/>
+          {sizeWarning && <div style={{fontSize:'11px',color:'#f59e0b',textAlign:'center',maxWidth:'280px',lineHeight:1.5}}>{sizeWarning}</div>}
         </div>
 
         {/* Name */}
