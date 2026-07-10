@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
-const GOOGLE_CLIENT_ID = '19019411743-cm27r14cvrb8hfmv2tl9ctr0klsv438s.apps.googleusercontent.com';
-const IS_CONFIGURED = GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const IS_CONFIGURED = Boolean(GOOGLE_CLIENT_ID);
+const SHOW_DEMO = import.meta.env.VITE_DEMO_LOGIN === 'true';
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -14,6 +15,16 @@ export default function Login() {
   useEffect(() => {
     if (user) navigate('/', { replace: true });
   }, [user, navigate]);
+
+  // Stable callback so it can be listed in the useEffect dep array
+  const handleGoogleResponse = useCallback((res) => {
+    // NOTE: atob decoding only reads the payload for display purposes.
+    // The credential JWT must be verified server-side against Google's public keys
+    // before granting any backend access — never trust this payload alone.
+    const payload = JSON.parse(atob(res.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    saveAndRedirect({ name: payload.name, email: payload.email, picture: payload.picture, provider: 'google', credential: res.credential });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [login]);
 
   useEffect(() => {
     if (!IS_CONFIGURED) return;
@@ -36,16 +47,10 @@ export default function Login() {
       return true;
     };
     if (!initGIS()) {
-      // Poll until GIS script loads (async defer)
       interval = setInterval(() => { if (initGIS()) clearInterval(interval); }, 100);
     }
     return () => clearInterval(interval);
-  }, []);
-
-  function handleGoogleResponse(res) {
-    const payload = JSON.parse(atob(res.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    saveAndRedirect({ name: payload.name, email: payload.email, picture: payload.picture, provider: 'google' });
-  }
+  }, [handleGoogleResponse]);
 
   function signInWithGoogle() {
     if (!IS_CONFIGURED) {
@@ -166,8 +171,12 @@ export default function Login() {
               ⚙️ Configure Google Client ID in Login.jsx to enable real Google login.
             </div>
 
-            <div className="divider">or</div>
-            <button className="demo-btn" onClick={signInDemo}>Continue as Demo User</button>
+            {SHOW_DEMO && (
+              <>
+                <div className="divider">or</div>
+                <button className="demo-btn" onClick={signInDemo}>Continue as Demo User</button>
+              </>
+            )}
 
             <div className="login-terms">
               By signing in you agree to our Terms of Service and Privacy Policy.<br/>
