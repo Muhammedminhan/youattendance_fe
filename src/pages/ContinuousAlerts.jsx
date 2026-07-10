@@ -48,7 +48,7 @@ const ALERTS = [
     daysClass: 'days-amber',
     since: 'Started 1 day ago — 1 Jul 2026',
     footer: '📌 Keep monitoring',
-    empId: null,
+    empId: 'EMP009',
   },
 ];
 
@@ -138,8 +138,8 @@ export default function ContinuousAlerts() {
 
       {/* Alert cards */}
       <div className="card-grid">
-        {ALERTS.map((a, i) => (
-          <Link key={i} className={`aec aec-${a.variant}`} to={a.empId ? `/employees/${a.empId}` : '#'}>
+        {ALERTS.map((a) => (
+          <Link key={a.empId || a.name} className={`aec aec-${a.variant}`} to={a.empId ? `/employees/${a.empId}` : '#'}>
             <div className="aec-head">
               <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
                 <div className={`av av-${a.variant}`}>{a.name[0]}</div>

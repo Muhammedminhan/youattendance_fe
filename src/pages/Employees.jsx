@@ -2,17 +2,35 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { EMPS } from '../data/employees';
 
-// TODO: replace with api call
-const EMPLOYEE_LIST = [
-  { id: 'EMP001', name: 'Sarah Johnson', dept: 'Engineering', days: 12, total: 20, status: 'leave', avatar: 'S', color: 'linear-gradient(135deg,#6366f1,#8b5cf6)', ringClass: 'ring-red', badgeClass: 'badge-red', badgeLabel: 'On Leave', types: 'Annual, Sick', barColor: 'linear-gradient(90deg,#6366f1,#8b5cf6)' },
-  { id: 'EMP002', name: 'Mohammed Al Rashid', dept: 'Finance', days: 8, total: 20, status: 'active', avatar: 'M', color: 'linear-gradient(135deg,#10b981,#059669)', ringClass: 'ring-green', badgeClass: 'badge-green', badgeLabel: 'Active', types: 'Annual', barColor: 'linear-gradient(90deg,#10b981,#34d399)' },
-  { id: 'EMP003', name: 'Priya Sharma', dept: 'HR', days: 5, total: 20, status: 'active', avatar: 'P', color: 'linear-gradient(135deg,#f59e0b,#d97706)', ringClass: 'ring-green', badgeClass: 'badge-green', badgeLabel: 'Active', types: 'Emergency', barColor: 'linear-gradient(90deg,#f59e0b,#fbbf24)' },
-  { id: 'EMP004', name: 'James Chen', dept: 'Operations', days: 19, total: 20, status: 'leave', avatar: 'J', color: 'linear-gradient(135deg,#ef4444,#dc2626)', ringClass: 'ring-red', badgeClass: 'badge-red', badgeLabel: 'On Leave', types: 'Annual, Sick, WFH', barColor: 'linear-gradient(90deg,#ef4444,#f87171)' },
-  { id: 'EMP005', name: 'Amira Hassan', dept: 'Marketing', days: 3, total: 20, status: 'active', avatar: 'A', color: 'linear-gradient(135deg,#06b6d4,#0891b2)', ringClass: 'ring-green', badgeClass: 'badge-green', badgeLabel: 'Active', types: 'Sick', barColor: 'linear-gradient(90deg,#06b6d4,#22d3ee)' },
-  { id: 'EMP006', name: 'David Okafor', dept: 'Product', days: 7, total: 20, status: 'active', avatar: 'D', color: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', ringClass: 'ring-green', badgeClass: 'badge-green', badgeLabel: 'Active', types: 'Annual, Unpaid', barColor: 'linear-gradient(90deg,#8b5cf6,#a78bfa)' },
-  { id: 'EMP007', name: 'Lisa Park', dept: 'Design', days: 24, total: 25, status: 'low', avatar: 'L', color: 'linear-gradient(135deg,#ec4899,#db2777)', ringClass: 'ring-amber', badgeClass: 'badge-amber', badgeLabel: 'Low Balance', types: 'Annual, Emergency, WFH', barColor: 'linear-gradient(90deg,#f59e0b,#fbbf24)' },
-  { id: 'EMP008', name: 'Ravi Patel', dept: 'Engineering', days: 11, total: 20, status: 'active', avatar: 'R', color: 'linear-gradient(135deg,#14b8a6,#0d9488)', ringClass: 'ring-green', badgeClass: 'badge-green', badgeLabel: 'Active', types: 'Annual, Sick', barColor: 'linear-gradient(90deg,#14b8a6,#2dd4bf)' },
-];
+function statusKey(status) {
+  if (status === 'On Leave') return 'leave';
+  if (status === 'Low Balance') return 'low';
+  return 'active';
+}
+function badgeInfo(status) {
+  if (status === 'On Leave') return { cls: 'badge-red', label: 'On Leave', ring: 'ring-red' };
+  if (status === 'Low Balance') return { cls: 'badge-amber', label: 'Low Balance', ring: 'ring-amber' };
+  return { cls: 'badge-green', label: 'Active', ring: 'ring-green' };
+}
+
+const EMPLOYEE_LIST = Object.values(EMPS).map(e => {
+  const { cls, label, ring } = badgeInfo(e.status);
+  const totalMax = e.balance.find(b => b.name === 'Annual Leave')?.max || 20;
+  return {
+    id: e.id,
+    name: e.name,
+    dept: e.dept,
+    days: e.stats.total,
+    total: totalMax,
+    status: statusKey(e.status),
+    color: e.color,
+    ringClass: ring,
+    badgeClass: cls,
+    badgeLabel: label,
+    types: e.balance.filter(b => b.used > 0).map(b => b.name.replace(' Leave','')).join(', '),
+    barColor: e.color.replace('135deg', '90deg'),
+  };
+});
 
 const SORT_META = {
   'default':     { label: 'Default' },
@@ -30,6 +48,11 @@ export default function Employees() {
   const [search, setSearch] = useState('');
   const [sortMode, setSortMode] = useState('default');
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [loading] = useState(false);
+  const [error] = useState(null);
+
+  if (loading) return <div className="loading-state">Loading...</div>;
+  if (error) return <div className="error-state">Failed to load data</div>;
 
   const sorted = useMemo(() => {
     let list = [...EMPLOYEE_LIST];
@@ -92,10 +115,10 @@ export default function Employees() {
         html.light .sort-item-name{color:rgba(20,30,70,.85)}
       `}</style>
 
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px',marginBottom:'28px',paddingRight:'56px'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px',marginBottom:'28px'}}>
         <div>
           <div className="page-title">👥 Employees</div>
-          <div className="page-sub">142 active employees</div>
+          <div className="page-sub">{Object.values(EMPS).filter(e => e.status !== 'Inactive').length} active employees</div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap'}}>
           <input

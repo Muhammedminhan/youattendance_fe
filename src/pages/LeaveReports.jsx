@@ -40,6 +40,11 @@ const LOW_BALANCE = [
 
 export default function LeaveReports() {
   const [activeTab, setActiveTab] = useState('month');
+  const [loading] = useState(false);
+  const [error] = useState(null);
+
+  if (loading) return <div className="loading-state">Loading...</div>;
+  if (error) return <div className="error-state">Failed to load data</div>;
 
   return (
     <main className="main">
@@ -78,9 +83,14 @@ export default function LeaveReports() {
         .low-bal{font-size:12px;color:rgba(245,158,11,.85);font-weight:700}
         html.light .low-name{color:rgba(30,41,59,.82)}
         @media(max-width:700px){.two-col-r{grid-template-columns:1fr}}
+        @media print {
+          .sidebar, .alert-banner, .sort-wrap { display: none !important; }
+          body { background: white !important; }
+          .report-modal-content { box-shadow: none !important; }
+        }
       `}</style>
 
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px',marginBottom:'28px',paddingRight:'56px'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px',marginBottom:'28px'}}>
         <div>
           <div className="page-title">📈 Leave Reports</div>
           <div className="page-sub">Analytics, top takers, and balance alerts</div>
@@ -101,8 +111,8 @@ export default function LeaveReports() {
               ))}
             </div>
           </div>
-          {TAB_DATA[activeTab].map((r, i) => (
-            <div key={i} className="rank-row">
+          {TAB_DATA[activeTab].map((r) => (
+            <div key={r.name} className="rank-row">
               <div className={`rank-num${r.rankClass?' '+r.rankClass:''}`}>{r.rank}</div>
               <div className="rank-name">{r.name}</div>
               <span className={`badge ${r.badgeClass}`}>{r.days}</span>
@@ -128,8 +138,8 @@ export default function LeaveReports() {
       {/* Low balance alerts */}
       <div className="reports-card g">
         <div className="sec-lbl">⚠️ Low Leave Balance Alerts</div>
-        {LOW_BALANCE.map((e, i) => (
-          <div key={i} className="low-row">
+        {LOW_BALANCE.map((e) => (
+          <div key={e.id} className="low-row">
             <div><div className="low-name">{e.name}</div><div style={{fontSize:'11px',color:'rgba(180,200,240,.45)'}}>{e.id}</div></div>
             <div style={{textAlign:'right'}}><div className="low-bal">{e.bal}</div><div style={{fontSize:'11px',color:'rgba(180,200,240,.40)'}}>{e.type}</div></div>
             <span className={`badge ${e.badgeClass}`}>{e.badge}</span>

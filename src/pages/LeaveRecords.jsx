@@ -28,6 +28,11 @@ const RECORDS = [
 
 export default function LeaveRecords() {
   const [search, setSearch] = useState('');
+  const [loading] = useState(false);
+  const [error] = useState(null);
+
+  if (loading) return <div className="loading-state">Loading...</div>;
+  if (error) return <div className="error-state">Failed to load data</div>;
 
   const filtered = RECORDS.filter(r =>
     !search || r.employee.toLowerCase().includes(search.toLowerCase()) || r.type.toLowerCase().includes(search.toLowerCase())
@@ -58,7 +63,7 @@ export default function LeaveRecords() {
         .tbl-wrap{overflow-x:auto}
       `}</style>
 
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px',marginBottom:'28px',paddingRight:'56px'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px',marginBottom:'28px'}}>
         <div>
           <div className="page-title">📋 Leave Records</div>
           <div className="page-sub">All leave requests and current absences</div>
@@ -68,8 +73,8 @@ export default function LeaveRecords() {
 
       <div className="sec-lbl">On Leave Today — {ON_LEAVE_TODAY.length} employees</div>
       <div className="on-leave-grid">
-        {ON_LEAVE_TODAY.map((e, i) => (
-          <div key={i} className="ol-card">
+        {ON_LEAVE_TODAY.map((e) => (
+          <div key={e.name} className="ol-card">
             <div className="ol-dot"></div>
             <div>
               <div className="ol-name">{e.name}</div>
@@ -96,8 +101,8 @@ export default function LeaveRecords() {
               <tr><th>Employee</th><th>Leave Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th></tr>
             </thead>
             <tbody>
-              {filtered.map((r, i) => (
-                <tr key={i}>
+              {filtered.map((r) => (
+                <tr key={r.from + r.employee}>
                   <td>{r.employee}</td>
                   <td>
                     <span className={`ltype ${r.typeClass}`}>

@@ -1,15 +1,13 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { EMPS, ALL } from '../data/employees';
-import { Chart, registerables } from 'chart.js';
-
-Chart.register(...registerables);
 
 // TODO: replace with api call
 export default function EmployeeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const emp = EMPS[id] || EMPS.EMP001;
+  const emp = EMPS[id];
+  if (!emp) return <Navigate to="/employees" replace />;
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const [searchHist, setSearchHist] = useState('');
@@ -181,8 +179,8 @@ export default function EmployeeDetail() {
           <table className="tbl">
             <thead><tr><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th></tr></thead>
             <tbody>
-              {filteredHistory.map((r, i) => (
-                <tr key={i}>
+              {filteredHistory.map((r) => (
+                <tr key={r.from + r.type}>
                   <td><span style={{width:'8px',height:'8px',borderRadius:'50%',background:r.color,display:'inline-block',marginRight:'7px'}}></span>{r.type}</td>
                   <td>{r.from}</td><td>{r.to}</td><td>{r.days}</td>
                   <td>{r.status === 'Active' ? <span className="badge badge-red">Active</span> : <span className="badge badge-gray">Completed</span>}</td>
@@ -250,7 +248,7 @@ export default function EmployeeDetail() {
                 <div style={{fontSize:'11px',fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.07em',marginBottom:'12px',paddingBottom:'6px',borderBottom:'1px solid #f1f5f9'}}>Leave History</div>
                 <table style={{width:'100%',borderCollapse:'collapse',fontSize:'12px'}}>
                   <thead><tr>{['Type','From','To','Days','Status'].map(h=><th key={h} style={{background:'#f8fafc',padding:'8px 12px',textAlign:'left',fontSize:'10px',fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.06em',borderBottom:'1px solid #e2e8f0'}}>{h}</th>)}</tr></thead>
-                  <tbody>{emp.history.map((r,i)=><tr key={i}><td style={{padding:'9px 12px',borderBottom:'1px solid #f8fafc',color:'#334155'}}>{r.type}</td><td style={{padding:'9px 12px',borderBottom:'1px solid #f8fafc',color:'#334155'}}>{r.from}</td><td style={{padding:'9px 12px',borderBottom:'1px solid #f8fafc',color:'#334155'}}>{r.to}</td><td style={{padding:'9px 12px',borderBottom:'1px solid #f8fafc',color:'#334155',textAlign:'center',fontWeight:700}}>{r.days}</td><td style={{padding:'9px 12px',borderBottom:'1px solid #f8fafc',color:'#334155'}}><span style={{padding:'2px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background:r.status==='Active'?'#fee2e2':'#f1f5f9',color:r.status==='Active'?'#dc2626':'#64748b'}}>{r.status}</span></td></tr>)}</tbody>
+                  <tbody>{emp.history.map((r)=><tr key={r.from + r.type}><td style={{padding:'9px 12px',borderBottom:'1px solid #f8fafc',color:'#334155'}}>{r.type}</td><td style={{padding:'9px 12px',borderBottom:'1px solid #f8fafc',color:'#334155'}}>{r.from}</td><td style={{padding:'9px 12px',borderBottom:'1px solid #f8fafc',color:'#334155'}}>{r.to}</td><td style={{padding:'9px 12px',borderBottom:'1px solid #f8fafc',color:'#334155',textAlign:'center',fontWeight:700}}>{r.days}</td><td style={{padding:'9px 12px',borderBottom:'1px solid #f8fafc',color:'#334155'}}><span style={{padding:'2px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background:r.status==='Active'?'#fee2e2':'#f1f5f9',color:r.status==='Active'?'#dc2626':'#64748b'}}>{r.status}</span></td></tr>)}</tbody>
                 </table>
               </div>
             </div>

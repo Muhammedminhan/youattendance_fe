@@ -373,3 +373,7 @@ html.light .alert-title { color: rgba(15,18,50,.90); }
 html:not(.light) .alert-title { color: #e6edf3; }
 html.light .alert-sub { color: rgba(60,80,140,.55); }
 html:not(.light) .alert-sub { color: rgba(180,190,210,.60); }
+
+/* ── Loading / Error states ── */
+.loading-state{display:flex;align-items:center;justify-content:center;min-height:60vh;font-size:14px;color:#8b949e;font-family:Inter,sans-serif}
+.error-state{display:flex;align-items:center;justify-content:center;min-height:60vh;font-size:14px;color:#ef4444;font-family:Inter,sans-serif}

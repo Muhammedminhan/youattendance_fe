@@ -16,10 +16,12 @@ function ProtectedRoute() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
   return (
-    <>
+    <div style={{display:'flex',minHeight:'100vh'}}>
       <Sidebar />
-      <Outlet />
-    </>
+      <div style={{flex:1,marginLeft:'220px',minWidth:0,position:'relative'}}>
+        <Outlet />
+      </div>
+    </div>
   );
 }
 

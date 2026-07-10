@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { EMPS, ALL } from '../data/employees';
-import { Chart, registerables } from 'chart.js';
-
-Chart.register(...registerables);
+import { Chart } from 'chart.js';
 
 // TODO: replace with api call
 
@@ -18,8 +16,8 @@ function statusBadge(s) {
 function histItems(emp) {
   const rows = emp.history.slice(0,5);
   if (!rows.length) return <div style={{fontSize:'12px',color:'rgba(180,200,240,.40)',padding:'12px 0'}}>No records</div>;
-  return rows.map((h,i) => (
-    <div key={i} className="hist-item">
+  return rows.map((h) => (
+    <div key={h.from + h.type} className="hist-item">
       <div className="hist-dot" style={{background:h.color}}></div>
       <div style={{flex:1}}>
         <div className="hist-type">{h.type}</div>
@@ -70,7 +68,7 @@ export default function Compare() {
 
   useEffect(() => {
     setSearchParams({ emp1: emp1Id, emp2: emp2Id }, { replace: true });
-  }, [emp1Id, emp2Id]);
+  }, [emp1Id, emp2Id, setSearchParams]);
 
   useEffect(() => {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -130,7 +128,7 @@ export default function Compare() {
       donut1Chart.current?.destroy();
       donut2Chart.current?.destroy();
     };
-  }, [emp1Id, emp2Id]);
+  }, [emp1Id, emp2Id, setSearchParams]);
 
   const aAnnual = a.balance.find(x => x.name === 'Annual Leave');
   const bAnnual = b.balance.find(x => x.name === 'Annual Leave');
@@ -204,7 +202,7 @@ export default function Compare() {
         @media(max-width:600px){.cmp-val{font-size:13px;padding:10px 12px}.cmp-metric{font-size:10px;padding:10px 4px}}
       `}</style>
 
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px',marginBottom:'24px',paddingRight:'56px'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px',marginBottom:'24px'}}>
         <div>
           <div className="page-title">🔀 Compare Employees</div>
           <div className="page-sub">Side-by-side leave analysis</div>

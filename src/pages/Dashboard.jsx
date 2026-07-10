@@ -1,14 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Chart, registerables } from 'chart.js';
+import { EMPS } from '../data/employees';
 
-Chart.register(...registerables);
-
-// TODO: fetch from api
-const STATS = { active: 142, onLeaveToday: 8, onLeaveWeek: 23, onLeaveMonth: 41 };
+// TODO: replace with api call — derived from local data until API is wired
+const EMP_LIST = Object.values(EMPS);
+const ACTIVE_COUNT = EMP_LIST.length;
+const ON_LEAVE_COUNT = EMP_LIST.filter(e => e.status === 'On Leave').length;
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const TREND_VALS = [12,18,9,24,15,21,8,16,20,13,11,19];
+// Trend: sum all employees' leave per calendar month from their history
+const TREND_VALS = MONTHS.map((_, mi) =>
+  EMP_LIST.reduce((sum, e) =>
+    sum + e.history.filter(h => {
+      const d = new Date(h.from); return d.getMonth() === mi;
+    }).reduce((s, h) => s + h.days, 0)
+  , 0)
+);
 
 function useLiveClock() {
   const [now, setNow] = useState(new Date());
@@ -58,11 +65,16 @@ function StatCard({ label, val, color, hint, trend, trendUp, icon, pct, pctLabel
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const [loading] = useState(false);
+  const [error] = useState(null);
   const now = useLiveClock();
   const donutRef = useRef(null);
   const trendRef = useRef(null);
   const donutChartRef = useRef(null);
   const trendChartRef = useRef(null);
+
+  if (loading) return <div className="loading-state">Loading...</div>;
+  if (error) return <div className="error-state">Failed to load data</div>;
 
   const h = now.getHours();
   const greeting = h < 12 ? 'Good morning 👋' : h < 17 ? 'Good afternoon ☀️' : 'Good evening 🌙';
@@ -230,7 +242,7 @@ export default function Dashboard() {
       </Link>
 
       {/* Hero greeting */}
-      <div style={{marginBottom:'28px',paddingRight:'56px'}}>
+      <div style={{marginBottom:'28px'}}>
         <div className="g" style={{borderRadius:'22px',padding:'22px 28px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'20px',flexWrap:'wrap'}}>
           <div style={{display:'flex',alignItems:'center',gap:'20px'}}>
             <div style={{position:'relative',flexShrink:0}}>
@@ -263,7 +275,7 @@ export default function Dashboard() {
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" fill="white" opacity=".9"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".9"/></svg>
               </div>
               <div>
-                <div style={{fontSize:'18px',fontWeight:800,color:'#dc2626',lineHeight:1}}>8</div>
+                <div style={{fontSize:'18px',fontWeight:800,color:'#dc2626',lineHeight:1}}>{Object.values(EMPS).filter(e => e.status === 'On Leave').length}</div>
                 <div style={{fontSize:'10px',fontWeight:600,color:'rgba(80,100,140,.55)',textTransform:'uppercase',letterSpacing:'.05em'}}>On leave</div>
               </div>
             </div>
@@ -281,7 +293,7 @@ export default function Dashboard() {
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5" r="2" fill="white" opacity=".8"/><path d="M1 14c0-2.76 2.01-5 4.5-5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".8"/><circle cx="11" cy="5" r="2.5" fill="white" opacity=".95"/><path d="M6.5 14c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".95"/></svg>
               </div>
               <div>
-                <div style={{fontSize:'18px',fontWeight:800,color:'#059669',lineHeight:1}}>142</div>
+                <div style={{fontSize:'18px',fontWeight:800,color:'#059669',lineHeight:1}}>{Object.values(EMPS).length}</div>
                 <div style={{fontSize:'10px',fontWeight:600,color:'rgba(80,100,140,.55)',textTransform:'uppercase',letterSpacing:'.05em'}}>Active</div>
               </div>
             </div>
@@ -291,10 +303,10 @@ export default function Dashboard() {
 
       {/* Stat cards */}
       <div className="stats-row">
-        <StatCard label="Active Employees" val={142} color="linear-gradient(135deg,#6366f1,#8b5cf6)" hint="across all departments" trend="↑ 3 from last month" trendUp pct="95%" pctLabel="capacity"
+        <StatCard label="Active Employees" val={ACTIVE_COUNT} color="linear-gradient(135deg,#6366f1,#8b5cf6)" hint="across all departments" trend="↑ 3 from last month" trendUp pct="95%" pctLabel="capacity"
           icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3.5" stroke="white" strokeWidth="1.8" fill="none" opacity=".95"/><path d="M2 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="white" strokeWidth="1.8" strokeLinecap="round" fill="none" opacity=".95"/><circle cx="18" cy="8" r="2.5" stroke="white" strokeWidth="1.6" fill="none" opacity=".60"/><path d="M21.5 20c0-2.76-1.57-5.12-3.9-6.28" stroke="white" strokeWidth="1.6" strokeLinecap="round" fill="none" opacity=".60"/></svg>}
         />
-        <StatCard label="On Leave Today" val={8} color="linear-gradient(135deg,#ef4444,#f97316)" hint="5.6% of workforce" trend="↑ 2 from yesterday" trendUp pct="5.6%" pctLabel="of staff"
+        <StatCard label="On Leave Today" val={ON_LEAVE_COUNT} color="linear-gradient(135deg,#ef4444,#f97316)" hint="5.6% of workforce" trend="↑ 2 from yesterday" trendUp pct="5.6%" pctLabel="of staff"
           icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="3" stroke="white" strokeWidth="1.8" fill="none" opacity=".95"/><line x1="12" y1="4" x2="12" y2="5.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" opacity=".80"/><line x1="18" y1="10" x2="16.5" y2="10" stroke="white" strokeWidth="1.6" strokeLinecap="round" opacity=".80"/><line x1="6" y1="10" x2="7.5" y2="10" stroke="white" strokeWidth="1.6" strokeLinecap="round" opacity=".80"/><line x1="3" y1="17" x2="21" y2="17" stroke="white" strokeWidth="1.8" strokeLinecap="round" opacity=".70"/><path d="M4 20 Q6.5 18.5 9 20 Q11.5 21.5 14 20 Q16.5 18.5 19 20" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".90"/></svg>}
         />
         <StatCard label="On Leave This Week" val={23} color="linear-gradient(135deg,#f59e0b,#f97316)" hint="Mon – Fri" trend="↓ 1 from last week" trendUp={false} pct="16%" pctLabel="this week"

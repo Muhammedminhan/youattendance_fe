@@ -1,12 +1,21 @@
 import { Link } from 'react-router-dom';
 
+function daysUntil(day, mon) {
+  const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+  const now = new Date();
+  let d = new Date(now.getFullYear(), months[mon], parseInt(day));
+  if (d < now) d.setFullYear(d.getFullYear() + 1);
+  const diff = Math.ceil((d - now) / 86400000);
+  return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : `${diff} days away`;
+}
+
 // TODO: replace with api call
 const UPCOMING = [
-  { day: '14', mon: 'Jul', name: 'Bastille Day', loc: 'All locations', daysAway: '12 days away', badgeClass: 'badge-blue', badge: 'Public', color: 'linear-gradient(135deg,#6366f1,#8b5cf6)' },
-  { day: '15', mon: 'Aug', name: 'Independence Day', loc: 'Dubai office', daysAway: '44 days away', badgeClass: 'badge-green', badge: 'Public', color: 'linear-gradient(135deg,#10b981,#059669)' },
-  { day: '25', mon: 'Aug', name: 'Summer Bank Holiday', loc: 'UK office', daysAway: '54 days away', badgeClass: 'badge-amber', badge: 'Restricted', color: 'linear-gradient(135deg,#f59e0b,#d97706)' },
-  { day: '23', mon: 'Sep', name: 'National Day', loc: 'All locations', daysAway: '83 days away', badgeClass: 'badge-blue', badge: 'Public', color: 'linear-gradient(135deg,#ef4444,#dc2626)' },
-  { day: '25', mon: 'Dec', name: 'Christmas Day', loc: 'All locations', daysAway: '176 days away', badgeClass: 'badge-blue', badge: 'Public', color: 'linear-gradient(135deg,#8b5cf6,#7c3aed)' },
+  { day: '14', mon: 'Jul', name: 'Bastille Day', loc: 'All locations', badgeClass: 'badge-blue', badge: 'Public', color: 'linear-gradient(135deg,#6366f1,#8b5cf6)' },
+  { day: '15', mon: 'Aug', name: 'Independence Day', loc: 'Dubai office', badgeClass: 'badge-green', badge: 'Public', color: 'linear-gradient(135deg,#10b981,#059669)' },
+  { day: '25', mon: 'Aug', name: 'Summer Bank Holiday', loc: 'UK office', badgeClass: 'badge-amber', badge: 'Restricted', color: 'linear-gradient(135deg,#f59e0b,#d97706)' },
+  { day: '23', mon: 'Sep', name: 'National Day', loc: 'All locations', badgeClass: 'badge-blue', badge: 'Public', color: 'linear-gradient(135deg,#ef4444,#dc2626)' },
+  { day: '25', mon: 'Dec', name: 'Christmas Day', loc: 'All locations', badgeClass: 'badge-blue', badge: 'Public', color: 'linear-gradient(135deg,#8b5cf6,#7c3aed)' },
 ];
 
 const PAST = [
@@ -35,7 +44,7 @@ export default function Holidays() {
         .holidays-card{border-radius:18px;padding:22px;margin-bottom:16px}
       `}</style>
 
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px',marginBottom:'28px',paddingRight:'56px'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px',marginBottom:'28px'}}>
         <div>
           <div className="page-title">🗓️ Holidays</div>
           <div className="page-sub">Upcoming &amp; past public holidays</div>
@@ -48,7 +57,7 @@ export default function Holidays() {
         <div className="sec-lbl">Upcoming Holidays</div>
         <div className="hlist">
           {UPCOMING.map((h, i) => (
-            <div key={i} className="hi">
+            <div key={h.name} className="hi">
               <div className="hbadge" style={{background:h.color}}>
                 <span className="hday">{h.day}</span>
                 <span className="hmon">{h.mon}</span>
@@ -57,7 +66,7 @@ export default function Holidays() {
                 <div className="hname">{h.name}</div>
                 <div className="hloc">{h.loc}</div>
               </div>
-              <span className="days-away">{h.daysAway}</span>
+              <span className="days-away">{daysUntil(h.day, h.mon)}</span>
               <span className={`badge ${h.badgeClass}`} style={{marginLeft:'8px'}}>{h.badge}</span>
             </div>
           ))}
