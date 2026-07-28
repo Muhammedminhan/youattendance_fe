@@ -1,6 +1,8 @@
 import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
+import { Chart, registerables } from 'chart.js';
 import { EMPS, ALL } from '../data/employees';
+Chart.register(...registerables);
 
 // TODO: replace with api call
 export default function EmployeeDetail() {

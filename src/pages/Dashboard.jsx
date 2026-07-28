@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Chart, registerables } from 'chart.js';
 import { useAuth } from '../context/AuthContext';
 import { EMPS } from '../data/employees';
+
+Chart.register(...registerables);
 
 // TODO: replace with api call — derived from local data until API is wired
 const EMP_LIST = Object.values(EMPS);
@@ -42,21 +44,32 @@ function useCountUp(target, duration = 900) {
   return val;
 }
 
+const PALETTES = {
+  purple: { bg:'linear-gradient(135deg,#a5b4fc,#818cf8)', text:'#818cf8', shadow:'rgba(129,140,248,.22)' },
+  red:    { bg:'linear-gradient(135deg,#fca5a5,#f87171)', text:'#f87171', shadow:'rgba(248,113,113,.22)' },
+  amber:  { bg:'linear-gradient(135deg,#fde68a,#fbbf24)', text:'#d97706', shadow:'rgba(251,191,36,.22)' },
+  teal:   { bg:'linear-gradient(135deg,#6ee7b7,#34d399)', text:'#059669', shadow:'rgba(52,211,153,.22)' },
+};
+
 function StatCard({ label, val, color, hint, trend, trendUp, icon, pct, pctLabel }) {
   const animated = useCountUp(val);
+  const p = color.includes('6366f1') ? PALETTES.purple
+          : color.includes('ef4444') ? PALETTES.red
+          : color.includes('f59e0b') ? PALETTES.amber
+          : PALETTES.teal;
   return (
     <div className="stat-card g">
-      <div style={{display:'flex',alignItems:'center',gap:'14px',marginBottom:'14px'}}>
-        <div style={{width:'48px',height:'48px',borderRadius:'14px',background:color,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 14px ${color.includes('6366f1')?'rgba(99,102,241,.35)':color.includes('ef4444')?'rgba(239,68,68,.35)':color.includes('f59e0b')?'rgba(245,158,11,.35)':'rgba(16,185,129,.35)'},0 0 0 1px rgba(255,255,255,.20) inset`,flexShrink:0}}>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'14px'}}>
+        <div style={{width:'48px',height:'48px',borderRadius:'14px',background:p.bg,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 14px ${p.shadow}`,flexShrink:0}}>
           {icon}
         </div>
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minWidth:'52px'}}>
-          <div style={{fontSize:'15px',fontWeight:800,color:color.includes('6366f1')?'#6366f1':color.includes('ef4444')?'#ef4444':color.includes('f59e0b')?'#f59e0b':'#10b981'}}>{pct}</div>
-          <div style={{fontSize:'9px',color:'rgba(80,100,140,.45)',fontWeight:600,letterSpacing:'.04em'}}>{pctLabel}</div>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end'}}>
+          <div style={{fontSize:'17px',fontWeight:800,color:p.text}}>{pct}</div>
+          <div style={{fontSize:'9px',color:'rgba(80,100,140,.40)',fontWeight:600,letterSpacing:'.04em'}}>{pctLabel}</div>
         </div>
       </div>
       <div className="stat-label">{label}</div>
-      <div className="stat-val" style={{color:color.includes('6366f1')?'#6366f1':color.includes('ef4444')?'#ef4444':color.includes('f59e0b')?'#f59e0b':'#10b981'}}>{animated}</div>
+      <div className="stat-val" style={{color:p.text}}>{animated}</div>
       <div className="stat-hint">{hint}</div>
       <div className={`stat-trend ${trendUp?'trend-up':'trend-down'}`}>{trend}</div>
     </div>
@@ -72,9 +85,6 @@ export default function Dashboard() {
   const trendRef = useRef(null);
   const donutChartRef = useRef(null);
   const trendChartRef = useRef(null);
-
-  if (loading) return <div className="loading-state">Loading...</div>;
-  if (error) return <div className="error-state">Failed to load data</div>;
 
   const h = now.getHours();
   const greeting = h < 12 ? 'Good morning 👋' : h < 17 ? 'Good afternoon ☀️' : 'Good evening 🌙';
@@ -193,60 +203,23 @@ export default function Dashboard() {
     };
   }, []);
 
+  if (loading) return <div className="loading-state">Loading...</div>;
+  if (error) return <div className="error-state">Failed to load data</div>;
+
   return (
     <main className="main">
       <style>{`
-        .charts-row{display:grid;grid-template-columns:1fr 1.6fr;gap:18px;margin-bottom:24px}
-        .card{border-radius:24px;padding:24px}
-        .alert-btn{border-radius:16px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:nowrap;cursor:pointer;text-decoration:none;color:inherit;transition:transform .22s ease,box-shadow .22s ease}
-        .alert-btn:hover{transform:translateY(-3px);box-shadow:0 24px 60px rgba(100,110,160,.22),0 1px 0 rgba(255,255,255,.95) inset!important}
-        html.dark .al-title{color:rgba(255,255,255,.92)}
-        html.dark .al-sub{color:rgba(180,200,240,.45)}
+        .charts-row{display:grid;grid-template-columns:1fr 1.6fr;gap:14px;margin-bottom:16px;align-items:start}
+        .card{border-radius:18px;padding:20px 22px}
         @media(max-width:900px){.charts-row{grid-template-columns:1fr}}
-        .alert-title{font-size:13px;font-weight:800;letter-spacing:-.02em;color:rgba(20,24,40,.90)}
-        html:not(.light) .alert-title{color:rgba(255,255,255,.92)}
-        .alert-sub{font-size:11px;color:rgba(60,80,120,.55)}
-        html:not(.light) .alert-sub{color:rgba(180,200,240,.55)}
       `}</style>
 
-      {/* Continuous alerts banner */}
-      <Link to="/alerts" className="alert-btn g" style={{textDecoration:'none',overflow:'hidden',marginBottom:'16px',position:'relative'}}>
-        <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,rgba(239,68,68,.06) 0%,transparent 60%)',pointerEvents:'none',zIndex:0}}></div>
-        <div style={{display:'flex',alignItems:'center',gap:'12px',position:'relative',zIndex:1}}>
-          <div style={{position:'relative',flexShrink:0}}>
-            <div style={{width:'38px',height:'38px',borderRadius:'11px',background:'linear-gradient(135deg,#ef4444,#dc2626)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(239,68,68,.40),0 0 0 1px rgba(255,255,255,.20) inset'}}>
-              <svg width="17" height="17" viewBox="0 0 22 22" fill="none"><path d="M11 2a6 6 0 0 1 6 6c0 3.5 1.5 5.5 2.5 6.5H2.5C3.5 13.5 5 11.5 5 8a6 6 0 0 1 6-6z" stroke="white" strokeWidth="1.6" strokeLinejoin="round" fill="none" opacity=".95"/><path d="M9 17.5c.3.9 1 1.5 2 1.5s1.7-.6 2-1.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" fill="none" opacity=".85"/><circle cx="16" cy="4" r="3" fill="#fbbf24" stroke="white" strokeWidth="1.5"/><text x="16" y="5" textAnchor="middle" fontSize="4" fontWeight="800" fill="white">3</text></svg>
-            </div>
-            <div style={{position:'absolute',top:'-2px',right:'-2px',width:'9px',height:'9px',borderRadius:'50%',background:'#ef4444',border:'2px solid rgba(255,255,255,.90)',animation:'pulse-dot 1.6s infinite',boxShadow:'0 0 6px rgba(239,68,68,.70)'}}></div>
-          </div>
-          <div>
-            <div className="alert-title">Continuous Leave Alerts</div>
-            <div style={{display:'flex',alignItems:'center',gap:'6px',marginTop:'2px'}}>
-              <span className="alert-sub">3 employees on extended leave</span>
-              <span style={{display:'flex',alignItems:'center',gap:'3px',padding:'1px 6px',borderRadius:'20px',background:'rgba(239,68,68,.10)',border:'1px solid rgba(239,68,68,.22)',fontSize:'9px',fontWeight:700,color:'#dc2626'}}>
-                <span style={{width:'4px',height:'4px',borderRadius:'50%',background:'#ef4444',animation:'pulse-dot 1.6s infinite',display:'inline-block'}}></span>LIVE
-              </span>
-            </div>
-          </div>
-        </div>
-        <div style={{display:'flex',alignItems:'center',gap:'8px',position:'relative',zIndex:1}}>
-          <div style={{display:'flex',gap:'5px'}}>
-            <span style={{display:'flex',alignItems:'center',gap:'4px',padding:'4px 10px',borderRadius:'20px',background:'rgba(239,68,68,.10)',border:'1px solid rgba(239,68,68,.22)',fontSize:'10px',fontWeight:700,color:'#dc2626'}}>Sick Priority</span>
-            <span style={{display:'flex',alignItems:'center',gap:'4px',padding:'4px 10px',borderRadius:'20px',background:'rgba(245,158,11,.10)',border:'1px solid rgba(245,158,11,.22)',fontSize:'10px',fontWeight:700,color:'#b45309'}}>2 Extended</span>
-          </div>
-          <div style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 16px',borderRadius:'11px',background:'linear-gradient(135deg,#ef4444,#dc2626)',color:'#fff',fontSize:'12px',fontWeight:700,boxShadow:'0 4px 14px rgba(239,68,68,.40),0 0 0 1px rgba(255,255,255,.15) inset',whiteSpace:'nowrap'}}>
-            View 3 Alerts
-            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </div>
-        </div>
-      </Link>
-
       {/* Hero greeting */}
-      <div style={{marginBottom:'28px'}}>
-        <div className="g" style={{borderRadius:'22px',padding:'22px 28px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'20px',flexWrap:'wrap'}}>
-          <div style={{display:'flex',alignItems:'center',gap:'20px'}}>
+      <div style={{marginBottom:'14px'}}>
+        <div className="g" style={{borderRadius:'20px',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'16px',flexWrap:'wrap',background:'linear-gradient(105deg,rgba(99,102,241,.05) 0%,rgba(255,255,255,0) 50%)'}}>
+          <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
             <div style={{position:'relative',flexShrink:0}}>
-              <div style={{width:'58px',height:'58px',borderRadius:'20px',background:'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 24px rgba(99,102,241,.45),0 0 0 1px rgba(255,255,255,.30) inset'}}>
+              <div style={{width:'56px',height:'56px',borderRadius:'16px',background:'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 6px 20px rgba(99,102,241,.40),0 0 0 1px rgba(255,255,255,.25) inset'}}>
                 <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
                   <text x="2" y="22" fontFamily="Inter,Arial,sans-serif" fontWeight="900" fontSize="13" fill="#ffffff">YOU</text>
                   <polyline points="6,27 11,32 20,22" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
@@ -259,7 +232,7 @@ export default function Dashboard() {
               <div style={{position:'absolute',bottom:'-3px',right:'-3px',width:'14px',height:'14px',borderRadius:'50%',background:'linear-gradient(135deg,#10b981,#06b6d4)',border:'2px solid rgba(255,255,255,.90)'}}></div>
             </div>
             <div>
-              <div className="hero-greeting" style={{fontSize:'24px',fontWeight:900,letterSpacing:'-.04em',lineHeight:1.1}}>{greeting}</div>
+              <div className="hero-greeting" style={{fontSize:'26px',fontWeight:900,letterSpacing:'-.04em',lineHeight:1.1}}>{greeting}</div>
               <div style={{display:'flex',alignItems:'center',gap:'10px',marginTop:'5px'}}>
                 <span style={{fontSize:'12px',color:'rgba(80,100,140,.55)',fontWeight:500}}>{dateStr}</span>
                 <span style={{width:'3px',height:'3px',borderRadius:'50%',background:'rgba(80,100,140,.25)',display:'inline-block'}}></span>
@@ -269,32 +242,32 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div style={{display:'flex',gap:'10px',flexWrap:'wrap'}}>
-            <div style={{display:'flex',alignItems:'center',gap:'10px',padding:'10px 16px',borderRadius:'16px',background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.20)'}}>
-              <div style={{width:'36px',height:'36px',borderRadius:'10px',background:'linear-gradient(135deg,#ef4444,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" fill="white" opacity=".9"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".9"/></svg>
+          <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
+            <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'12px',background:'rgba(248,113,113,.08)',border:'1px solid rgba(248,113,113,.18)'}}>
+              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#fca5a5,#f87171)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" fill="white" opacity=".9"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".9"/></svg>
               </div>
               <div>
-                <div style={{fontSize:'18px',fontWeight:800,color:'#dc2626',lineHeight:1}}>{Object.values(EMPS).filter(e => e.status === 'On Leave').length}</div>
-                <div style={{fontSize:'10px',fontWeight:600,color:'rgba(80,100,140,.55)',textTransform:'uppercase',letterSpacing:'.05em'}}>On leave</div>
+                <div style={{fontSize:'15px',fontWeight:800,color:'#f87171',lineHeight:1}}>{Object.values(EMPS).filter(e => e.status === 'On Leave').length}</div>
+                <div style={{fontSize:'9px',fontWeight:600,color:'rgba(80,100,140,.50)',textTransform:'uppercase',letterSpacing:'.05em'}}>On leave</div>
               </div>
             </div>
-            <div style={{display:'flex',alignItems:'center',gap:'10px',padding:'10px 16px',borderRadius:'16px',background:'rgba(245,158,11,.08)',border:'1px solid rgba(245,158,11,.20)'}}>
-              <div style={{width:'36px',height:'36px',borderRadius:'10px',background:'linear-gradient(135deg,#f59e0b,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2l5.5 10H2.5L8 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" opacity=".9"/><line x1="8" y1="7" x2="8" y2="9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="11.5" r=".8" fill="white"/></svg>
+            <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'12px',background:'rgba(251,191,36,.08)',border:'1px solid rgba(251,191,36,.20)'}}>
+              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#fde68a,#fbbf24)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l5.5 10H2.5L8 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" opacity=".9"/><line x1="8" y1="7" x2="8" y2="9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="11.5" r=".8" fill="white"/></svg>
               </div>
               <div>
-                <div style={{fontSize:'18px',fontWeight:800,color:'#b45309',lineHeight:1}}>3</div>
-                <div style={{fontSize:'10px',fontWeight:600,color:'rgba(80,100,140,.55)',textTransform:'uppercase',letterSpacing:'.05em'}}>Alerts</div>
+                <div style={{fontSize:'15px',fontWeight:800,color:'#d97706',lineHeight:1}}>3</div>
+                <div style={{fontSize:'9px',fontWeight:600,color:'rgba(80,100,140,.50)',textTransform:'uppercase',letterSpacing:'.05em'}}>Alerts</div>
               </div>
             </div>
-            <div style={{display:'flex',alignItems:'center',gap:'10px',padding:'10px 16px',borderRadius:'16px',background:'rgba(16,185,129,.08)',border:'1px solid rgba(16,185,129,.20)'}}>
-              <div style={{width:'36px',height:'36px',borderRadius:'10px',background:'linear-gradient(135deg,#10b981,#06b6d4)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5" r="2" fill="white" opacity=".8"/><path d="M1 14c0-2.76 2.01-5 4.5-5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".8"/><circle cx="11" cy="5" r="2.5" fill="white" opacity=".95"/><path d="M6.5 14c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".95"/></svg>
+            <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'12px',background:'rgba(52,211,153,.08)',border:'1px solid rgba(52,211,153,.18)'}}>
+              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#6ee7b7,#34d399)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5" r="2" fill="white" opacity=".8"/><path d="M1 14c0-2.76 2.01-5 4.5-5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".8"/><circle cx="11" cy="5" r="2.5" fill="white" opacity=".95"/><path d="M6.5 14c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".95"/></svg>
               </div>
               <div>
-                <div style={{fontSize:'18px',fontWeight:800,color:'#059669',lineHeight:1}}>{Object.values(EMPS).length}</div>
-                <div style={{fontSize:'10px',fontWeight:600,color:'rgba(80,100,140,.55)',textTransform:'uppercase',letterSpacing:'.05em'}}>Active</div>
+                <div style={{fontSize:'15px',fontWeight:800,color:'#059669',lineHeight:1}}>{Object.values(EMPS).length}</div>
+                <div style={{fontSize:'9px',fontWeight:600,color:'rgba(80,100,140,.50)',textTransform:'uppercase',letterSpacing:'.05em'}}>Active</div>
               </div>
             </div>
           </div>
@@ -320,30 +293,30 @@ export default function Dashboard() {
       {/* Charts */}
       <div className="charts-row">
         <div className="card g" style={{display:'flex',flexDirection:'column'}}>
-          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'6px'}}>
-            <div><div className="sec-lbl" style={{marginBottom:'2px'}}>Leave by Type</div><div style={{fontSize:'11px',color:'rgba(80,100,140,.45)'}}>Current year distribution</div></div>
-            <div style={{textAlign:'right'}}><div style={{fontSize:'22px',fontWeight:800,color:'rgba(20,24,50,.75)'}}>100</div><div style={{fontSize:'9px',color:'rgba(80,100,140,.45)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.05em'}}>total days</div></div>
+          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'4px'}}>
+            <div><div className="sec-lbl" style={{marginBottom:'1px'}}>Leave by Type</div><div style={{fontSize:'10px',color:'rgba(80,100,140,.45)'}}>Current year distribution</div></div>
+            <div style={{textAlign:'right'}}><div style={{fontSize:'16px',fontWeight:800,color:'rgba(20,24,50,.75)'}}>100</div><div style={{fontSize:'9px',color:'rgba(80,100,140,.45)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.05em'}}>total days</div></div>
           </div>
-          <div style={{display:'flex',flexWrap:'wrap',gap:'6px',marginBottom:'12px'}}>
+          <div style={{display:'flex',flexWrap:'wrap',gap:'4px',marginBottom:'6px'}}>
             {[['#6366f1','Annual 45%'],['#ef4444','Sick 22%'],['#f59e0b','Emergency 11%'],['#10b981','WFH 14%'],['#94a3b8','Unpaid 8%']].map(([c,l]) => (
               <span key={l} style={{display:'flex',alignItems:'center',gap:'4px',padding:'3px 10px',borderRadius:'20px',background:`rgba(${c==='#6366f1'?'99,102,241':c==='#ef4444'?'239,68,68':c==='#f59e0b'?'245,158,11':c==='#10b981'?'16,185,129':'148,163,184'},.10)`,border:`1px solid rgba(${c==='#6366f1'?'99,102,241':c==='#ef4444'?'239,68,68':c==='#f59e0b'?'245,158,11':c==='#10b981'?'16,185,129':'148,163,184'},.20)`,fontSize:'10px',fontWeight:700,color:c}}>
                 <span style={{width:'6px',height:'6px',borderRadius:'50%',background:c,display:'inline-block'}}></span>{l}
               </span>
             ))}
           </div>
-          <div className="chart-wrap" style={{height:'190px',flex:1}}><canvas ref={donutRef}></canvas></div>
+          <div className="chart-wrap" style={{height:'200px'}}><canvas ref={donutRef}></canvas></div>
         </div>
 
         <div className="card g" style={{display:'flex',flexDirection:'column'}}>
-          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'16px'}}>
-            <div><div className="sec-lbl" style={{marginBottom:'2px'}}>Monthly Leave Trend</div><div style={{fontSize:'11px',color:'rgba(80,100,140,.45)'}}>Days taken per month — 2026</div></div>
+          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'8px'}}>
+            <div><div className="sec-lbl" style={{marginBottom:'1px'}}>Monthly Leave Trend</div><div style={{fontSize:'10px',color:'rgba(80,100,140,.45)'}}>Days taken per month — 2026</div></div>
             <div style={{display:'flex',gap:'10px',alignItems:'center'}}>
               <div style={{display:'flex',alignItems:'center',gap:'5px'}}><span style={{width:'10px',height:'10px',borderRadius:'3px',background:'#6366f1',display:'inline-block',opacity:.75}}></span><span style={{fontSize:'10px',color:'rgba(80,100,140,.55)',fontWeight:600}}>Below avg</span></div>
               <div style={{display:'flex',alignItems:'center',gap:'5px'}}><span style={{width:'10px',height:'10px',borderRadius:'3px',background:'#f59e0b',display:'inline-block',opacity:.75}}></span><span style={{fontSize:'10px',color:'rgba(80,100,140,.55)',fontWeight:600}}>Above avg</span></div>
               <div style={{display:'flex',alignItems:'center',gap:'5px'}}><span style={{width:'10px',height:'10px',borderRadius:'3px',background:'#ef4444',display:'inline-block',opacity:.75}}></span><span style={{fontSize:'10px',color:'rgba(80,100,140,.55)',fontWeight:600}}>High</span></div>
             </div>
           </div>
-          <div className="chart-wrap" style={{height:'215px',flex:1}}><canvas ref={trendRef}></canvas></div>
+          <div className="chart-wrap" style={{height:'220px'}}><canvas ref={trendRef}></canvas></div>
         </div>
       </div>
     </main>

@@ -9,21 +9,11 @@ html,body{
   overflow-x:hidden;
 }
 
-/* ── Light mode background — premium mesh gradient ── */
+/* ── Light mode background ── */
 html.light body, body {
-  background: #eef0f8;
+  background: #f5f7fa;
 }
-html.light body::before, body::before {
-  display: block;
-  content: '';
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background:
-    radial-gradient(ellipse 70% 60% at 10% 0%,   rgba(99,102,241,.13) 0%, transparent 65%),
-    radial-gradient(ellipse 55% 50% at 90% 5%,   rgba(139,92,246,.10) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 45% at 50% 100%,  rgba(59,130,246,.09) 0%, transparent 65%),
-    radial-gradient(ellipse 40% 35% at 80% 55%,  rgba(16,185,129,.07) 0%, transparent 60%),
-    linear-gradient(160deg, #f0f2ff 0%, #eef0f8 40%, #f4f0ff 100%);
-}
+html.light body::before, body::before { display: none; }
 html.light body::after { display: none }
 
 /* ── Dark mode ── */
@@ -73,27 +63,20 @@ html:not(.light) body::after{ display: none }
 }
 .g>*{position:relative;z-index:1}
 
-/* Light mode glass cards — pure white, sharp, premium */
+/* Light mode — clean flat white cards */
 html.light .g{
-  background:rgba(255,255,255,.80);
-  border:1px solid rgba(220,225,245,.75);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.95) inset,
-    0 4px 6px rgba(100,110,160,.06),
-    0 12px 40px rgba(100,110,160,.14);
-  backdrop-filter:blur(20px) saturate(1.8);
-  -webkit-backdrop-filter:blur(20px) saturate(1.8);
+  background:#ffffff;
+  border:1px solid #dde2ef;
+  box-shadow:0 1px 4px rgba(50,60,120,.06),0 4px 16px rgba(50,60,120,.05);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
 }
-html.light .g::before{
-  background:linear-gradient(180deg, rgba(255,255,255,.60) 0%, transparent 100%);
-}
+html.light .g::before{ display:none; }
 html.light .g:hover{
-  background:rgba(255,255,255,.92);
+  background:#ffffff;
   border-color:rgba(99,102,241,.20);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.98) inset,
-    0 8px 16px rgba(99,102,241,.08),
-    0 24px 60px rgba(100,110,160,.20);
+  box-shadow:0 2px 8px rgba(99,102,241,.07),0 6px 20px rgba(99,102,241,.05);
+  transform:translateY(-2px) scale(1.002);
 }
 
 /* ── Accent color classes ── */
@@ -102,7 +85,7 @@ html.light .g:hover{
 /* ── Sidebar — dark default ── */
 .sidebar{
   position:fixed;left:0;top:0;bottom:0;width:220px;z-index:100;
-  padding:20px 12px 20px;display:flex;flex-direction:column;gap:2px;
+  padding:16px 12px 12px;display:flex;flex-direction:column;gap:1px;
   background:rgba(6,7,18,.88);
   backdrop-filter:blur(28px);
   -webkit-backdrop-filter:blur(28px);
@@ -110,10 +93,10 @@ html.light .g:hover{
   box-shadow:4px 0 40px rgba(0,0,0,.50), 1px 0 0 rgba(99,102,241,.08) inset;
 }
 html.light .sidebar{
-  background:rgba(248,249,255,.78);
-  border-right:1px solid rgba(220,225,245,.70);
-  box-shadow:4px 0 40px rgba(120,130,170,.14), 1px 0 0 rgba(255,255,255,.80) inset;
-  backdrop-filter:blur(32px) saturate(1.6);
+  background:#ffffff;
+  border-right:1px solid #e8eaf0;
+  box-shadow:none;
+  backdrop-filter:none;
 }
 
 /* ── Logo ── */
@@ -142,19 +125,19 @@ html.light .logo-you{color:#6366f1}
 .nav-group{
   font-size:9px;font-weight:800;color:rgba(120,130,160,.35);
   text-transform:uppercase;letter-spacing:.12em;
-  padding:14px 4px 5px;
+  padding:6px 4px 4px;
 }
 html.light .nav-group{color:rgba(80,90,130,.35)}
 
 /* ── Nav links — individual bubble cards ── */
 .nav-a{
-  display:flex;align-items:center;gap:14px;
-  padding:12px 14px;border-radius:18px;
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:12px;
   font-size:13px;font-weight:600;
   text-decoration:none;
-  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+  transition:all .18s ease;
   position:relative;
-  margin-bottom:6px;
+  margin-bottom:2px;
   background:rgba(255,255,255,.05);
   border:1.5px solid rgba(255,255,255,.09);
   color:rgba(180,190,220,.55);
@@ -174,44 +157,45 @@ html.light .nav-group{color:rgba(80,90,130,.35)}
   box-shadow:0 8px 28px rgba(99,102,241,.32), 0 1px 0 rgba(255,255,255,.12) inset;
   transform:translateY(-2px) scale(1.01);
 }
-/* ── Light mode — frosted glass sidebar ── */
+/* ── Light mode — flat transparent nav items ── */
 html.light .nav-a{
-  background:rgba(255,255,255,.82);
-  border:1.5px solid rgba(220,225,245,.70);
-  color:rgba(75,85,130,.55);
-  box-shadow:0 2px 8px rgba(100,110,160,.10), 0 1px 0 rgba(255,255,255,.90) inset;
+  background:transparent;
+  border:none;
+  color:rgba(55,65,110,.55);
+  box-shadow:none;
   backdrop-filter:none;
+  transform:none;
 }
 html.light .nav-a:hover{
-  background:rgba(255,255,255,.95);
-  border-color:rgba(180,185,240,.70);
-  color:rgba(50,55,120,.80);
-  transform:translateY(-1px);
-  box-shadow:0 4px 14px rgba(100,110,180,.14);
+  background:rgba(99,102,241,.06);
+  border:none;
+  color:rgba(55,65,110,.85);
+  transform:none;
+  box-shadow:none;
 }
 html.light .nav-a.on{
-  background:linear-gradient(135deg,#eef0ff,#f5f3ff);
-  border-color:rgba(99,102,241,.35);
-  color:#3730a3;
-  box-shadow:0 4px 16px rgba(99,102,241,.18), 0 1px 0 rgba(255,255,255,.90) inset;
+  background:#eef2ff;
+  border:none;
+  color:#4338ca;
+  box-shadow:none;
   transform:none;
   font-weight:700;
 }
 
 /* ── Nav icon chip ── */
 .nav-ico{
-  width:38px;height:38px;border-radius:12px;flex-shrink:0;
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  transition:transform .20s cubic-bezier(.34,1.56,.64,1);
+  transition:transform .18s ease;
 }
-.nav-a:hover .nav-ico{transform:scale(1.10)}
-.nav-a.on .nav-ico{transform:scale(1.06)}
+.nav-a:hover .nav-ico{transform:scale(1.06)}
+.nav-a.on .nav-ico{transform:scale(1.03)}
 
 /* ── Main content ── */
-.main{margin-left:220px;padding:28px 32px;min-height:100vh;position:relative;z-index:1}
+.main{margin-left:0;padding:18px 24px 24px;position:relative;z-index:1}
 
 /* ── Page header ── */
-.page-hd{margin-bottom:28px}
+.page-hd{margin-bottom:14px}
 .page-title{font-size:22px;font-weight:800;letter-spacing:-.02em;color:#e6edf3}
 .page-sub{font-size:13px;color:#8b949e;margin-top:4px}
 html.light .page-title{color:rgba(15,20,50,.92)}
@@ -255,13 +239,13 @@ html.light .sb-theme-label{color:rgba(80,90,130,.40)}
 html.light .theme-btn{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.18);box-shadow:0 2px 8px rgba(99,102,241,.10)}
 
 /* ── Stat cards ── */
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
-.stat-card{border-radius:24px;padding:24px}
-.stat-icon{font-size:30px;margin-bottom:14px;display:block;line-height:1}
-.stat-label{font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px}
-.stat-val{font-size:42px;font-weight:800;letter-spacing:-.04em;line-height:1}
-.stat-hint{font-size:11px;color:#6e7681;margin-top:8px}
-.stat-trend{display:inline-flex;align-items:center;gap:4px;margin-top:10px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.stat-card{border-radius:18px;padding:20px 22px}
+.stat-icon{font-size:26px;margin-bottom:10px;display:block;line-height:1}
+.stat-label{font-size:9px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
+.stat-val{font-size:42px;font-weight:800;letter-spacing:-.04em;line-height:1.05}
+.stat-hint{font-size:11px;color:#6e7681;margin-top:6px}
+.stat-trend{display:inline-flex;align-items:center;gap:4px;margin-top:12px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700}
 .trend-up{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.25);color:#34d399}
 .trend-down{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
 html.light .stat-label{color:rgba(60,80,120,.50)}
@@ -280,7 +264,7 @@ html.light .stat-ring-bg{stroke:rgba(0,0,0,.10)}
 html.light .stat-ring-label{color:rgba(60,80,120,.60)}
 
 /* ── Chart wrapper ── */
-.chart-wrap{position:relative;height:220px}
+.chart-wrap{position:relative;height:180px}
 
 /* ── Section label ── */
 .sec-lbl{font-size:11px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
@@ -356,10 +340,8 @@ html.light .empty{color:rgba(80,100,140,.40)}
 
 /* ── Hero greeting text — light vs dark mode ── */
 html.light .hero-greeting {
-  background: linear-gradient(120deg, #1e1b4b 0%, #4f46e5 50%, #7c3aed 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: rgba(15,18,50,.90);
+  -webkit-text-fill-color: rgba(15,18,50,.90);
 }
 html:not(.light) .hero-greeting {
   background: linear-gradient(120deg, #ffffff 0%, #a5b4fc 55%, #c4b5fd 100%);
