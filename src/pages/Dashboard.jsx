@@ -120,7 +120,8 @@ export default function Dashboard() {
   const [period, setPeriod] = useState('year');
 
   const h = now.getHours();
-  const greeting = h < 12 ? 'Good morning 👋' : h < 17 ? 'Good afternoon ☀️' : 'Good evening 🌙';
+  const greetWord  = h < 12 ? 'Good morning'   : h < 17 ? 'Good afternoon' : 'Good evening';
+  const greetEmoji = h < 12 ? '👋'              : h < 17 ? '☀️'             : '🌙';
   const dateStr = now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
   const timeStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 
@@ -311,56 +312,99 @@ export default function Dashboard() {
         .legend-pill{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;user-select:none;border:1px solid transparent}
         .legend-pill:hover{transform:translateY(-1px)}
         .chart-section-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(5,150,105,.60)}70%{box-shadow:0 0 0 8px rgba(5,150,105,0)}100%{box-shadow:0 0 0 0 rgba(5,150,105,0)}}
+        .live-dot{animation:livePulse 2.2s ease-out infinite}
+        @keyframes clockBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+        .clock-dot{animation:clockBlink 2s ease infinite}
+        @keyframes liveSmall{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:.65}}
+        .live-badge-dot{animation:liveSmall 1.6s ease infinite}
+        .hero-kpi{transition:transform .22s cubic-bezier(.34,1.2,.64,1),box-shadow .22s ease,background .15s,border-color .15s}
+        html.light .hero-kpi:hover{transform:translateY(-4px)}
       `}</style>
 
-      {/* Hero greeting */}
-      <div style={{marginBottom:'14px'}}>
-        <div className="g" style={{borderRadius:'20px',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'16px',flexWrap:'wrap',background:'linear-gradient(120deg,rgba(99,102,241,.10) 0%,rgba(139,92,246,.05) 45%,rgba(255,255,255,0) 75%)',borderLeft:'3px solid rgba(99,102,241,.25)'}}>
-          <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
-            <div style={{position:'relative',flexShrink:0}}>
-              <div style={{width:'56px',height:'56px',borderRadius:'16px',background:'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 6px 20px rgba(99,102,241,.40),0 0 0 1px rgba(255,255,255,.25) inset'}}>
-                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                  <text x="2" y="22" fontFamily="Inter,Arial,sans-serif" fontWeight="900" fontSize="13" fill="#ffffff">YOU</text>
-                  <polyline points="6,27 11,32 20,22" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                  <circle cx="25" cy="24" r="1.5" fill="rgba(255,255,255,.70)"/>
-                  <circle cx="30" cy="24" r="1.5" fill="rgba(255,255,255,.70)"/>
-                  <circle cx="25" cy="29" r="1.5" fill="rgba(255,255,255,.70)"/>
-                  <circle cx="30" cy="29" r="1.5" fill="rgba(255,255,255,.70)"/>
-                </svg>
+      {/* ── Hero Banner ── */}
+      <div style={{marginBottom:'16px'}}>
+        <div className="g" style={{borderRadius:'24px',overflow:'hidden',position:'relative',border:'1px solid rgba(37,99,235,.11)',boxShadow:'0 2px 20px rgba(37,99,235,.07),0 1px 0 rgba(255,255,255,.80) inset'}}>
+          {/* Dot-grid texture */}
+          <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(37,99,235,.055) 1px,transparent 1px)',backgroundSize:'22px 22px',pointerEvents:'none',zIndex:0}} />
+          {/* Radial glow — left */}
+          <div style={{position:'absolute',top:'-30px',left:'20px',width:'220px',height:'140px',background:'radial-gradient(ellipse,rgba(37,99,235,.09) 0%,transparent 70%)',pointerEvents:'none',zIndex:0}} />
+          {/* Radial glow — right */}
+          <div style={{position:'absolute',bottom:'-20px',right:'260px',width:'140px',height:'100px',background:'radial-gradient(ellipse,rgba(14,116,144,.07) 0%,transparent 70%)',pointerEvents:'none',zIndex:0}} />
+
+          <div style={{position:'relative',zIndex:1,display:'flex',alignItems:'center',justifyContent:'space-between',gap:'20px',padding:'22px 28px',flexWrap:'wrap'}}>
+
+            {/* Left: logo + greeting */}
+            <div style={{display:'flex',alignItems:'center',gap:'20px'}}>
+              {/* Logo badge with pulse */}
+              <div style={{position:'relative',flexShrink:0}}>
+                <div style={{width:'64px',height:'64px',borderRadius:'20px',background:'linear-gradient(145deg,#1D4ED8,#4F46E5,#7C3AED)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 28px rgba(37,99,235,.42),0 2px 0 rgba(255,255,255,.22) inset'}}>
+                  <svg width="40" height="40" viewBox="0 0 36 36" fill="none">
+                    <text x="2" y="22" fontFamily="Inter,Arial,sans-serif" fontWeight="900" fontSize="13" fill="#ffffff">YOU</text>
+                    <polyline points="6,27 11,32 20,22" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                    <circle cx="25" cy="24" r="1.5" fill="rgba(255,255,255,.70)"/>
+                    <circle cx="30" cy="24" r="1.5" fill="rgba(255,255,255,.70)"/>
+                    <circle cx="25" cy="29" r="1.5" fill="rgba(255,255,255,.70)"/>
+                    <circle cx="30" cy="29" r="1.5" fill="rgba(255,255,255,.70)"/>
+                  </svg>
+                </div>
+                <div className="live-dot" style={{position:'absolute',bottom:'-4px',right:'-4px',width:'18px',height:'18px',borderRadius:'50%',background:'linear-gradient(135deg,#059669,#10b981)',border:'3px solid white'}} />
               </div>
-              <div style={{position:'absolute',bottom:'-3px',right:'-3px',width:'14px',height:'14px',borderRadius:'50%',background:'linear-gradient(135deg,#10b981,#06b6d4)',border:'2px solid rgba(255,255,255,.90)'}}></div>
-            </div>
-            <div>
-              <div className="hero-greeting" style={{fontSize:'26px',fontWeight:900,letterSpacing:'-.04em',lineHeight:1.1}}>{greeting}</div>
-              <div style={{display:'flex',alignItems:'center',gap:'10px',marginTop:'5px'}}>
-                <span style={{fontSize:'12px',color:'rgba(80,100,140,.55)',fontWeight:500}}>{dateStr}</span>
-                <span style={{width:'3px',height:'3px',borderRadius:'50%',background:'rgba(80,100,140,.25)',display:'inline-block'}}></span>
-                <div style={{display:'flex',alignItems:'center',gap:'4px',padding:'3px 10px',borderRadius:'8px',background:'rgba(99,102,241,.10)',border:'1px solid rgba(99,102,241,.18)'}}>
-                  <span style={{fontSize:'12px',fontWeight:800,color:'rgba(99,102,241,.85)',fontVariantNumeric:'tabular-nums',letterSpacing:'.06em'}}>{timeStr}</span>
+
+              {/* Greeting text */}
+              <div>
+                <div style={{fontSize:'28px',fontWeight:900,letterSpacing:'-.04em',lineHeight:1.1}}>
+                  {greetWord},{' '}
+                  <span style={{background:'linear-gradient(130deg,#2563EB,#7C3AED)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}>
+                    {user?.name?.split(' ')[0] || 'there'}
+                  </span>
+                  {' '}{greetEmoji}
+                </div>
+                <div style={{display:'flex',alignItems:'center',gap:'10px',marginTop:'8px',flexWrap:'wrap'}}>
+                  <span style={{fontSize:'12px',color:'rgba(80,100,140,.52)',fontWeight:500}}>{dateStr}</span>
+                  <span style={{width:'3px',height:'3px',borderRadius:'50%',background:'rgba(80,100,140,.22)',flexShrink:0}} />
+                  <div style={{display:'flex',alignItems:'center',gap:'6px',padding:'4px 12px',borderRadius:'10px',background:'rgba(37,99,235,.09)',border:'1px solid rgba(37,99,235,.16)'}}>
+                    <span className="clock-dot" style={{width:'6px',height:'6px',borderRadius:'50%',background:'#2563EB',flexShrink:0}} />
+                    <span style={{fontSize:'12px',fontWeight:800,color:'#1D4ED8',letterSpacing:'.07em',fontVariantNumeric:'tabular-nums'}}>{timeStr}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
-            {[
-              { rgb:'190,18,60',  bg:'linear-gradient(135deg,#E11D48,#9F1239)', val: Object.values(EMPS).filter(e => e.status === 'On Leave').length, sub:'On leave', textColor:'#BE123C',
-                icon:<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" fill="white" opacity=".9"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".9"/></svg> },
-              { rgb:'180,83,9',   bg:'linear-gradient(135deg,#D97706,#92400E)', val: 3, sub:'Alerts', textColor:'#B45309',
-                icon:<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l5.5 10H2.5L8 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" opacity=".9"/><line x1="8" y1="7" x2="8" y2="9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="11.5" r=".8" fill="white"/></svg> },
-              { rgb:'4,120,87',   bg:'linear-gradient(135deg,#059669,#047857)', val: Object.values(EMPS).length, sub:'Active', textColor:'#047857',
-                icon:<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5" r="2" fill="white" opacity=".8"/><path d="M1 14c0-2.76 2.01-5 4.5-5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".8"/><circle cx="11" cy="5" r="2.5" fill="white" opacity=".95"/><path d="M6.5 14c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".95"/></svg> },
-            ].map(({ rgb, bg, val, sub, textColor, icon }) => (
-              <div key={sub} style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 14px',borderRadius:'12px',background:`rgba(${rgb},.08)`,border:`1px solid rgba(${rgb},.18)`,transition:'transform .18s,box-shadow .18s',cursor:'default'}}
-                onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow=`0 6px 20px rgba(${rgb},.16)`; }}
-                onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}
-              >
-                <div style={{width:'28px',height:'28px',borderRadius:'8px',background:bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{icon}</div>
-                <div>
-                  <div style={{fontSize:'16px',fontWeight:800,color:textColor,lineHeight:1}}>{val}</div>
-                  <div style={{fontSize:'9px',fontWeight:600,color:'rgba(80,100,140,.50)',textTransform:'uppercase',letterSpacing:'.05em'}}>{sub}</div>
+
+            {/* Vertical divider */}
+            <div style={{width:'1px',alignSelf:'stretch',minHeight:'52px',background:'linear-gradient(to bottom,transparent 0%,rgba(37,99,235,.18) 30%,rgba(37,99,235,.18) 70%,transparent 100%)',flexShrink:0}} />
+
+            {/* Right: KPI metric cards */}
+            <div style={{display:'flex',gap:'10px',flexWrap:'wrap'}}>
+              {[
+                { rgb:'190,18,60', bg:'linear-gradient(135deg,#E11D48,#9F1239)', val:Object.values(EMPS).filter(e=>e.status==='On Leave').length, sub:'On Leave', textColor:'#BE123C', live:true,
+                  icon:<svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" fill="white" opacity=".9"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".9"/></svg> },
+                { rgb:'180,83,9',  bg:'linear-gradient(135deg,#D97706,#92400E)', val:3, sub:'Alerts',   textColor:'#B45309', live:false,
+                  icon:<svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 2l5.5 10H2.5L8 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" opacity=".9"/><line x1="8" y1="7" x2="8" y2="9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="11.5" r=".8" fill="white"/></svg> },
+                { rgb:'4,120,87',  bg:'linear-gradient(135deg,#059669,#047857)', val:Object.values(EMPS).length, sub:'Active Staff', textColor:'#047857', live:false,
+                  icon:<svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5" r="2" fill="white" opacity=".8"/><path d="M1 14c0-2.76 2.01-5 4.5-5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".8"/><circle cx="11" cy="5" r="2.5" fill="white" opacity=".95"/><path d="M6.5 14c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".95"/></svg> },
+              ].map(({ rgb, bg, val, sub, textColor, icon, live }) => (
+                <div key={sub} className="hero-kpi"
+                  style={{display:'flex',alignItems:'center',gap:'14px',padding:'13px 18px 13px 13px',borderRadius:'18px',background:`rgba(${rgb},.07)`,border:`1px solid rgba(${rgb},.14)`,minWidth:'132px',position:'relative',overflow:'hidden',cursor:'default'}}
+                  onMouseEnter={e => { e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.background=`rgba(${rgb},.13)`; e.currentTarget.style.boxShadow=`0 12px 36px rgba(${rgb},.22)`; e.currentTarget.style.borderColor=`rgba(${rgb},.28)`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.background=`rgba(${rgb},.07)`; e.currentTarget.style.boxShadow=''; e.currentTarget.style.borderColor=`rgba(${rgb},.14)`; }}
+                >
+                  {/* Corner blob */}
+                  <div style={{position:'absolute',top:'-16px',right:'-16px',width:'60px',height:'60px',borderRadius:'50%',background:`rgba(${rgb},.11)`,pointerEvents:'none'}} />
+                  {/* Icon badge */}
+                  <div style={{width:'44px',height:'44px',borderRadius:'14px',background:bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 4px 18px rgba(${rgb},.34)`,position:'relative'}}>
+                    {icon}
+                    {live && <span className="live-badge-dot" style={{position:'absolute',top:'-3px',right:'-3px',width:'10px',height:'10px',borderRadius:'50%',background:'#10b981',border:'2px solid white'}} />}
+                  </div>
+                  {/* Number + label */}
+                  <div>
+                    <div style={{fontSize:'30px',fontWeight:900,color:textColor,lineHeight:1,letterSpacing:'-.04em'}}>{val}</div>
+                    <div style={{fontSize:'9.5px',fontWeight:700,color:'rgba(60,80,120,.50)',textTransform:'uppercase',letterSpacing:'.07em',marginTop:'3px'}}>{sub}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
           </div>
         </div>
       </div>
