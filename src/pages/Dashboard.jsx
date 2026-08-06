@@ -43,17 +43,14 @@ function useCountUp(target, duration = 900) {
 }
 
 const PALETTES = {
-  purple: { bg:'linear-gradient(135deg,#6366f1,#4f46e5)', text:'#6366f1', shadow:'rgba(99,102,241,.30)',  blob:'rgba(99,102,241,.07)', rgb:'99,102,241'  },
-  red:    { bg:'linear-gradient(135deg,#ef4444,#dc2626)', text:'#e53e3e', shadow:'rgba(239,68,68,.26)',   blob:'rgba(239,68,68,.07)',  rgb:'239,68,68'    },
-  amber:  { bg:'linear-gradient(135deg,#f59e0b,#d97706)', text:'#c96c00', shadow:'rgba(245,158,11,.26)', blob:'rgba(245,158,11,.07)', rgb:'245,158,11'   },
-  teal:   { bg:'linear-gradient(135deg,#10b981,#059669)', text:'#047857', shadow:'rgba(16,185,129,.26)',  blob:'rgba(16,185,129,.07)', rgb:'16,185,129'   },
+  cobalt: { bg:'linear-gradient(135deg,#2563EB,#1E40AF)', text:'#1D4ED8', shadow:'rgba(29,78,216,.28)',  blob:'rgba(29,78,216,.06)',  rgb:'29,78,216'   },
+  rose:   { bg:'linear-gradient(135deg,#E11D48,#9F1239)', text:'#BE123C', shadow:'rgba(190,18,60,.24)',  blob:'rgba(190,18,60,.06)',  rgb:'190,18,60'   },
+  amber:  { bg:'linear-gradient(135deg,#D97706,#92400E)', text:'#B45309', shadow:'rgba(180,83,9,.24)',   blob:'rgba(180,83,9,.06)',   rgb:'180,83,9'    },
+  teal:   { bg:'linear-gradient(135deg,#0891B2,#0E7490)', text:'#0E7490', shadow:'rgba(14,116,144,.24)', blob:'rgba(14,116,144,.06)', rgb:'14,116,144'  },
 };
 
 function getPalette(color) {
-  if (color.includes('6366f1') || color.includes('4f46e5')) return PALETTES.purple;
-  if (color.includes('ef4444') || color.includes('f97316')) return PALETTES.red;
-  if (color.includes('f59e0b')) return PALETTES.amber;
-  return PALETTES.teal;
+  return PALETTES[color] || PALETTES.cobalt;
 }
 
 function StatCard({ label, val, color, hint, trend, trendUp, icon, pct, pctLabel }) {
@@ -105,11 +102,11 @@ function StatCard({ label, val, color, hint, trend, trendUp, icon, pct, pctLabel
 }
 
 const DONUT_DATA = [
-  { label:'Annual',    pct:45, color:'#6366f1', rgb:'99,102,241'   },
-  { label:'Sick',      pct:22, color:'#ef4444', rgb:'239,68,68'    },
-  { label:'Emergency', pct:11, color:'#f59e0b', rgb:'245,158,11'   },
-  { label:'WFH',       pct:14, color:'#10b981', rgb:'16,185,129'   },
-  { label:'Unpaid',    pct:8,  color:'#94a3b8', rgb:'148,163,184'  },
+  { label:'Annual',    pct:45, color:'#2563EB', rgb:'37,99,235'    },
+  { label:'Sick',      pct:22, color:'#E11D48', rgb:'225,29,72'    },
+  { label:'Emergency', pct:11, color:'#D97706', rgb:'217,119,6'    },
+  { label:'WFH',       pct:14, color:'#059669', rgb:'5,150,105'    },
+  { label:'Unpaid',    pct:8,  color:'#7C3AED', rgb:'124,58,237'   },
 ];
 
 export default function Dashboard() {
@@ -199,7 +196,7 @@ export default function Dashboard() {
     const gradientColors = filteredVals.map(v => {
       const isHigh = v >= avg * 1.4;
       const isAbove = v >= avg;
-      const [r, g, b] = isHigh ? [239,68,68] : isAbove ? [245,158,11] : [99,102,241];
+      const [r, g, b] = isHigh ? [225,29,72] : isAbove ? [217,119,6] : [37,99,235];
       const grad = ctx.createLinearGradient(0, 0, 0, 240);
       grad.addColorStop(0, `rgba(${r},${g},${b},.92)`);
       grad.addColorStop(1, `rgba(${r},${g},${b},.18)`);
@@ -209,7 +206,7 @@ export default function Dashboard() {
     const hoverColors = filteredVals.map(v => {
       const isHigh = v >= avg * 1.4;
       const isAbove = v >= avg;
-      const [r, g, b] = isHigh ? [239,68,68] : isAbove ? [245,158,11] : [99,102,241];
+      const [r, g, b] = isHigh ? [225,29,72] : isAbove ? [217,119,6] : [37,99,235];
       const grad = ctx.createLinearGradient(0, 0, 0, 240);
       grad.addColorStop(0, `rgba(${r},${g},${b},1)`);
       grad.addColorStop(1, `rgba(${r},${g},${b},.45)`);
@@ -223,15 +220,15 @@ export default function Dashboard() {
         const yPos = y.getPixelForValue(avg);
         c.save();
         c.beginPath(); c.moveTo(left, yPos); c.lineTo(right, yPos);
-        c.strokeStyle = 'rgba(99,102,241,.35)'; c.lineWidth = 1.5; c.setLineDash([5,4]); c.stroke();
+        c.strokeStyle = 'rgba(37,99,235,.35)'; c.lineWidth = 1.5; c.setLineDash([5,4]); c.stroke();
         const label = `avg ${avg.toFixed(1)}`;
         c.font = '700 10px Inter,sans-serif';
         const w = c.measureText(label).width + 18;
         const px = right - w - 4, py = yPos - 12, ph = 20, pr = 6;
         c.setLineDash([]);
-        c.fillStyle = 'rgba(99,102,241,.12)';
+        c.fillStyle = 'rgba(37,99,235,.12)';
         c.beginPath(); c.roundRect(px, py, w, ph, pr); c.fill();
-        c.fillStyle = 'rgba(99,102,241,.80)'; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillStyle = 'rgba(37,99,235,.80)'; c.textAlign = 'center'; c.textBaseline = 'middle';
         c.fillText(label, px + w/2, py + ph/2);
         c.restore();
       }
@@ -346,11 +343,11 @@ export default function Dashboard() {
           </div>
           <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
             {[
-              { rgb:'248,113,113', bg:'linear-gradient(135deg,#ef4444,#dc2626)', val: Object.values(EMPS).filter(e => e.status === 'On Leave').length, sub:'On leave', textColor:'#f87171',
+              { rgb:'190,18,60',  bg:'linear-gradient(135deg,#E11D48,#9F1239)', val: Object.values(EMPS).filter(e => e.status === 'On Leave').length, sub:'On leave', textColor:'#BE123C',
                 icon:<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" fill="white" opacity=".9"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".9"/></svg> },
-              { rgb:'251,191,36', bg:'linear-gradient(135deg,#f59e0b,#d97706)', val: 3, sub:'Alerts', textColor:'#d97706',
+              { rgb:'180,83,9',   bg:'linear-gradient(135deg,#D97706,#92400E)', val: 3, sub:'Alerts', textColor:'#B45309',
                 icon:<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l5.5 10H2.5L8 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" opacity=".9"/><line x1="8" y1="7" x2="8" y2="9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="11.5" r=".8" fill="white"/></svg> },
-              { rgb:'52,211,153', bg:'linear-gradient(135deg,#10b981,#059669)', val: Object.values(EMPS).length, sub:'Active', textColor:'#059669',
+              { rgb:'4,120,87',   bg:'linear-gradient(135deg,#059669,#047857)', val: Object.values(EMPS).length, sub:'Active', textColor:'#047857',
                 icon:<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5" r="2" fill="white" opacity=".8"/><path d="M1 14c0-2.76 2.01-5 4.5-5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".8"/><circle cx="11" cy="5" r="2.5" fill="white" opacity=".95"/><path d="M6.5 14c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".95"/></svg> },
             ].map(({ rgb, bg, val, sub, textColor, icon }) => (
               <div key={sub} style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 14px',borderRadius:'12px',background:`rgba(${rgb},.08)`,border:`1px solid rgba(${rgb},.18)`,transition:'transform .18s,box-shadow .18s',cursor:'default'}}
@@ -370,16 +367,16 @@ export default function Dashboard() {
 
       {/* Stat cards */}
       <div className="stats-row">
-        <StatCard label="Active Employees" val={ACTIVE_COUNT} color="linear-gradient(135deg,#6366f1,#8b5cf6)" hint="across all departments" trend="↑ 3 from last month" trendUp pct="95%" pctLabel="capacity"
+        <StatCard label="Active Employees" val={ACTIVE_COUNT} color="cobalt" hint="across all departments" trend="↑ 3 from last month" trendUp pct="95%" pctLabel="capacity"
           icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3.5" stroke="white" strokeWidth="1.8" fill="none" opacity=".95"/><path d="M2 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="white" strokeWidth="1.8" strokeLinecap="round" fill="none" opacity=".95"/><circle cx="18" cy="8" r="2.5" stroke="white" strokeWidth="1.6" fill="none" opacity=".60"/><path d="M21.5 20c0-2.76-1.57-5.12-3.9-6.28" stroke="white" strokeWidth="1.6" strokeLinecap="round" fill="none" opacity=".60"/></svg>}
         />
-        <StatCard label="On Leave Today" val={ON_LEAVE_COUNT} color="linear-gradient(135deg,#ef4444,#f97316)" hint="5.6% of workforce" trend="↑ 2 from yesterday" trendUp pct="5.6%" pctLabel="of staff"
+        <StatCard label="On Leave Today" val={ON_LEAVE_COUNT} color="rose" hint="5.6% of workforce" trend="↑ 2 from yesterday" trendUp pct="5.6%" pctLabel="of staff"
           icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="3" stroke="white" strokeWidth="1.8" fill="none" opacity=".95"/><line x1="12" y1="4" x2="12" y2="5.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" opacity=".80"/><line x1="18" y1="10" x2="16.5" y2="10" stroke="white" strokeWidth="1.6" strokeLinecap="round" opacity=".80"/><line x1="6" y1="10" x2="7.5" y2="10" stroke="white" strokeWidth="1.6" strokeLinecap="round" opacity=".80"/><line x1="3" y1="17" x2="21" y2="17" stroke="white" strokeWidth="1.8" strokeLinecap="round" opacity=".70"/><path d="M4 20 Q6.5 18.5 9 20 Q11.5 21.5 14 20 Q16.5 18.5 19 20" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".90"/></svg>}
         />
-        <StatCard label="On Leave This Week" val={23} color="linear-gradient(135deg,#f59e0b,#f97316)" hint="Mon – Fri" trend="↓ 1 from last week" trendUp={false} pct="16%" pctLabel="this week"
+        <StatCard label="On Leave This Week" val={23} color="amber" hint="Mon – Fri" trend="↓ 1 from last week" trendUp={false} pct="16%" pctLabel="this week"
           icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2.5" stroke="white" strokeWidth="1.8" fill="none" opacity=".95"/><path d="M3 10h18" stroke="white" strokeWidth="1.4" opacity=".50"/><line x1="8" y1="3" x2="8" y2="7" stroke="white" strokeWidth="2" strokeLinecap="round" opacity=".90"/><line x1="16" y1="3" x2="16" y2="7" stroke="white" strokeWidth="2" strokeLinecap="round" opacity=".90"/><circle cx="7" cy="14.5" r="1.2" fill="white" opacity=".90"/><circle cx="10" cy="14.5" r="1.2" fill="white" opacity=".90"/><circle cx="13" cy="14.5" r="1.2" fill="white" opacity=".90"/></svg>}
         />
-        <StatCard label="On Leave This Month" val={41} color="linear-gradient(135deg,#10b981,#06b6d4)" hint="July 2026" trend="↑ 5 from June" trendUp pct="29%" pctLabel="this month"
+        <StatCard label="On Leave This Month" val={41} color="teal" hint="July 2026" trend="↑ 5 from June" trendUp pct="29%" pctLabel="this month"
           icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2.5" stroke="white" strokeWidth="1.8" fill="none" opacity=".95"/><path d="M3 10h18" stroke="white" strokeWidth="1.4" opacity=".50"/><line x1="8" y1="3" x2="8" y2="7" stroke="white" strokeWidth="2" strokeLinecap="round" opacity=".90"/><line x1="16" y1="3" x2="16" y2="7" stroke="white" strokeWidth="2" strokeLinecap="round" opacity=".90"/><rect x="6" y="13" width="3.5" height="3.5" rx="1" fill="white" opacity=".90"/><rect x="10.3" y="13" width="3.5" height="3.5" rx="1" fill="white" opacity=".70"/><rect x="14.6" y="13" width="3.5" height="3.5" rx="1" fill="white" opacity=".50"/></svg>}
         />
       </div>
@@ -456,7 +453,7 @@ export default function Dashboard() {
 
           {/* Legend */}
           <div style={{display:'flex',gap:'10px',alignItems:'center',marginBottom:'8px'}}>
-            {[['#6366f1','Below avg'],['#f59e0b','Above avg'],['#ef4444','High']].map(([c,l]) => (
+            {[['#2563EB','Below avg'],['#D97706','Above avg'],['#E11D48','High']].map(([c,l]) => (
               <div key={l} style={{display:'flex',alignItems:'center',gap:'5px'}}>
                 <span style={{width:'10px',height:'10px',borderRadius:'3px',background:c,display:'inline-block',opacity:.75}}/>
                 <span style={{fontSize:'10px',color:'rgba(80,100,140,.55)',fontWeight:600}}>{l}</span>
