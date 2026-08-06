@@ -217,6 +217,18 @@ html.light .nav-a.on{
 .nav-a:hover .nav-ico{transform:scale(1.06)}
 .nav-a.on .nav-ico{transform:scale(1.03)}
 
+/* ── Profile card button hover ── */
+.sb-user-row:hover{
+  background:rgba(255,255,255,.14)!important;
+  border-color:rgba(255,255,255,.20)!important;
+}
+html.light .sb-user-row:hover{
+  background:rgba(255,255,255,.95)!important;
+  border-color:rgba(99,102,241,.30)!important;
+  box-shadow:0 3px 16px rgba(99,102,241,.14),0 6px 24px rgba(99,102,241,.08)!important;
+  transform:translateX(3px);
+}
+
 /* ── Main content ── */
 .main{margin-left:0;padding:18px 24px 24px;position:relative;z-index:1}
 

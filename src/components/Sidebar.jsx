@@ -65,21 +65,30 @@ export default function Sidebar() {
           </span>Holidays
         </NavLink>
 
-        {/* User profile row */}
-        <div style={{marginTop:'auto',padding:'10px 10px 4px',borderTop:`1px solid ${isLight?'#e4e8f0':'#21262d'}`}}>
+        {/* User profile row — glass card button matching nav items */}
+        <div style={{marginTop:'auto',padding:'8px 0 4px'}}>
           <div
             onClick={() => setProfileOpen(true)}
-            style={{display:'flex',alignItems:'center',gap:'10px',padding:'7px 8px',borderRadius:'10px',cursor:'pointer'}}
             className="sb-user-row"
+            style={{
+              display:'flex',alignItems:'center',gap:'10px',
+              padding:'9px 12px',borderRadius:'14px',cursor:'pointer',
+              background:isLight?'rgba(255,255,255,.72)':'rgba(255,255,255,.06)',
+              border:isLight?'1px solid rgba(210,218,244,.65)':'1px solid rgba(255,255,255,.09)',
+              boxShadow:isLight?'0 1px 3px rgba(100,110,200,.07),0 2px 10px rgba(100,110,200,.05)':'0 2px 12px rgba(0,0,0,.18)',
+              backdropFilter:'blur(10px)',
+              WebkitBackdropFilter:'blur(10px)',
+              transition:'all .20s cubic-bezier(.34,1.2,.64,1)',
+            }}
           >
             {user?.picture ? (
               <img
                 src={getEffectivePicture()}
                 alt=""
-                style={{width:'32px',height:'32px',borderRadius:'10px',objectFit:'cover',flexShrink:0}}
+                style={{width:'34px',height:'34px',borderRadius:'10px',objectFit:'cover',flexShrink:0,boxShadow:'0 2px 8px rgba(0,0,0,.12)'}}
               />
             ) : (
-              <div style={{width:'32px',height:'32px',borderRadius:'10px',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'#fff',fontWeight:700,fontSize:'13px'}}>
+              <div style={{width:'34px',height:'34px',borderRadius:'10px',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'#fff',fontWeight:700,fontSize:'13px',boxShadow:'0 2px 8px rgba(99,102,241,.35)'}}>
                 {user?.name?.[0] || 'U'}
               </div>
             )}
@@ -87,13 +96,13 @@ export default function Sidebar() {
               <div style={{fontSize:'12px',fontWeight:700,color:isLight?'rgba(20,24,40,.88)':'#c9d1d9',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                 {user?.name?.split(' ')[0] || 'User'}
               </div>
-              <div style={{fontSize:'10px',color:isLight?'rgba(80,90,130,.55)':'#484f58',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+              <div style={{fontSize:'10px',color:isLight?'rgba(80,90,130,.52)':'#484f58',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                 {user?.email || ''}
               </div>
             </div>
             <button
               onClick={(e) => { e.stopPropagation(); toggleTheme(); }}
-              style={{flexShrink:0,width:'30px',height:'30px',borderRadius:'8px',cursor:'pointer',fontSize:'13px',display:'flex',alignItems:'center',justifyContent:'center',background:isLight?'rgba(99,102,241,.10)':'rgba(255,255,255,.08)',border:`1px solid ${isLight?'rgba(99,102,241,.22)':'rgba(255,255,255,.10)'}`,transition:'background .15s'}}
+              style={{flexShrink:0,width:'28px',height:'28px',borderRadius:'8px',cursor:'pointer',fontSize:'13px',display:'flex',alignItems:'center',justifyContent:'center',background:isLight?'rgba(99,102,241,.10)':'rgba(255,255,255,.08)',border:`1px solid ${isLight?'rgba(99,102,241,.20)':'rgba(255,255,255,.10)'}`,transition:'all .15s'}}
             >
               {isLight ? '🌙' : '☀️'}
             </button>
