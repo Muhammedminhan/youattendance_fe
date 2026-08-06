@@ -110,6 +110,102 @@ const DONUT_DATA = [
   { label:'Unpaid',    pct:8,  color:'#7C3AED', rgb:'124,58,237'   },
 ];
 
+const LEAVE_TYPE_COLOR = {
+  'Annual Leave':{ color:'#2563EB', rgb:'37,99,235'  },
+  'Sick Leave':  { color:'#E11D48', rgb:'225,29,72'  },
+  'Emergency':   { color:'#D97706', rgb:'217,119,6'  },
+  'WFH':         { color:'#059669', rgb:'5,150,105'  },
+  'Unpaid':      { color:'#7C3AED', rgb:'124,58,237' },
+};
+const AVATAR_COLORS = ['#2563EB','#E11D48','#D97706','#059669','#7C3AED','#0891B2','#4F46E5'];
+function avatarBg(name) {
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[h];
+}
+
+function TeamToday({ isLight }) {
+  const onLeave  = EMP_LIST.filter(e => e.status === 'On Leave');
+  const available = EMP_LIST.length - onLeave.length;
+  const availPct = Math.round((available / EMP_LIST.length) * 100);
+
+  const textPri = isLight ? 'rgba(15,23,42,.88)'  : '#e6edf3';
+  const textSub = isLight ? 'rgba(60,80,120,.50)' : '#8b949e';
+
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px',marginTop:'0'}}>
+      {/* On Leave Today */}
+      <div className="card g">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+            <div style={{width:'32px',height:'32px',borderRadius:'10px',
+              background:'linear-gradient(135deg,#E11D48,#9F1239)',
+              display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="5.5" r="2.5" stroke="white" strokeWidth="1.4" fill="none"/>
+                <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{fontSize:'13px',fontWeight:700,color:textPri}}>On Leave Today</div>
+              <div style={{fontSize:'10px',color:textSub}}>{onLeave.length} of {EMP_LIST.length} staff away</div>
+            </div>
+          </div>
+          {/* Availability pill */}
+          <div style={{padding:'4px 11px',borderRadius:'20px',fontSize:'11px',fontWeight:700,
+            background: availPct >= 80 ? 'rgba(5,150,105,.10)' : 'rgba(217,119,6,.10)',
+            border: `1px solid ${availPct>=80?'rgba(5,150,105,.22)':'rgba(217,119,6,.22)'}`,
+            color: availPct >= 80 ? (isLight?'#047857':'#6ee7b7') : (isLight?'#B45309':'#fcd34d'),
+          }}>
+            {availPct}% available
+          </div>
+        </div>
+
+        {onLeave.length === 0 ? (
+          <div style={{textAlign:'center',padding:'24px 0',color:textSub,fontSize:'12px'}}>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style={{display:'block',margin:'0 auto 8px',opacity:.4}}>
+              <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="2" fill="none"/>
+              <path d="M10 16l4 4 8-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Everyone is in today
+          </div>
+        ) : (
+          <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+            {onLeave.map(emp => {
+              const active = emp.history.find(h => h.status === 'Active');
+              const ltc = active ? (LEAVE_TYPE_COLOR[active.type] || LEAVE_TYPE_COLOR['Annual Leave']) : LEAVE_TYPE_COLOR['Annual Leave'];
+              return (
+                <div key={emp.id} style={{display:'flex',alignItems:'center',gap:'10px',
+                  padding:'9px 12px',borderRadius:'10px',
+                  background:isLight?`rgba(${ltc.rgb},.05)`:`rgba(${ltc.rgb},.08)`,
+                  border:`1px solid rgba(${ltc.rgb},${isLight?'.10':'.14'})`}}>
+                  <div style={{width:'32px',height:'32px',borderRadius:'9px',flexShrink:0,
+                    background:emp.color,display:'flex',alignItems:'center',justifyContent:'center',
+                    fontSize:'11px',fontWeight:800,color:'#fff',
+                    boxShadow:`0 2px 8px rgba(${ltc.rgb},.25)`}}>
+                    {emp.name.split(' ').map(w=>w[0]).join('').slice(0,2)}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:'12px',fontWeight:700,color:textPri,
+                      overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{emp.name}</div>
+                    <div style={{fontSize:'10px',color:textSub}}>{emp.dept}</div>
+                  </div>
+                  <span style={{fontSize:'10px',fontWeight:700,padding:'2px 8px',borderRadius:'20px',
+                    background:`rgba(${ltc.rgb},.12)`,color:ltc.color,flexShrink:0,whiteSpace:'nowrap',
+                    border:`1px solid rgba(${ltc.rgb},.20)`}}>
+                    {active?.type || 'On Leave'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const { isLight } = useTheme();
@@ -376,8 +472,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Vertical divider */}
-            <div style={{width:'1px',alignSelf:'stretch',minHeight:'52px',background:isLight?'linear-gradient(to bottom,transparent 0%,rgba(37,99,235,.18) 30%,rgba(37,99,235,.18) 70%,transparent 100%)':'linear-gradient(to bottom,transparent 0%,rgba(255,255,255,.14) 30%,rgba(255,255,255,.14) 70%,transparent 100%)',flexShrink:0}} />
 
             {/* Right: KPI metric cards */}
             <div style={{display:'flex',gap:'10px',flexWrap:'wrap'}}>
@@ -513,6 +607,11 @@ export default function Dashboard() {
           <div className="chart-wrap" style={{height:'220px'}}><canvas ref={trendRef}></canvas></div>
         </div>
       </div>
+
+      {/* ── Team Today ── */}
+      <TeamToday isLight={isLight} />
+
+
     </main>
   );
 }

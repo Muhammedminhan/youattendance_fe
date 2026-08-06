@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import BackButton from '../components/BackButton';
 
 function daysUntil(day, mon) {
   const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
@@ -74,7 +74,7 @@ export default function Holidays() {
             <div className="page-sub">Upcoming &amp; past public holidays</div>
           </div>
         </div>
-        <Link to="/" className="back-btn">← Back</Link>
+        <BackButton to="/" label="Back" />
       </div>
 
       {/* Upcoming */}

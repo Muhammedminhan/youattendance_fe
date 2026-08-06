@@ -15,7 +15,16 @@ export default function Sidebar() {
     <>
       <nav className="sidebar">
         {/* Logo */}
-        <div className="sb-logo">
+        <div className="sb-logo" style={{
+          background:isLight?'rgba(255,255,255,.80)':'rgba(255,255,255,.06)',
+          border:isLight?'1px solid rgba(210,218,244,.70)':'1px solid rgba(255,255,255,.09)',
+          borderRadius:'14px',
+          padding:'10px 12px',
+          boxShadow:isLight?'0 1px 4px rgba(100,110,200,.08)':'0 2px 10px rgba(0,0,0,.18)',
+          backdropFilter:'blur(12px)',
+          WebkitBackdropFilter:'blur(12px)',
+          marginBottom:'4px',
+        }}>
           <div className="sb-logo-mark" style={{width:'38px',height:'38px',borderRadius:'12px',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 4px 14px rgba(99,102,241,.45)'}}>
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
               <text x="3" y="14" fontFamily="Inter,Arial,sans-serif" fontWeight="900" fontSize="10" fill="#ffffff" letterSpacing="-0.3">YOU</text>
@@ -66,7 +75,7 @@ export default function Sidebar() {
         </NavLink>
 
         {/* User profile row — glass card button matching nav items */}
-        <div style={{marginTop:'auto',padding:'8px 0 4px'}}>
+        <div style={{padding:'4px 0 4px',marginTop:'auto'}}>
           <div
             onClick={() => setProfileOpen(true)}
             className="sb-user-row"

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { EMPS } from '../data/employees';
 import { useTheme } from '../context/ThemeContext';
+import BackButton from '../components/BackButton';
 
 function statusKey(status) {
   if (status === 'On Leave')     return 'leave';
@@ -132,7 +133,7 @@ export default function Employees() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <Link to="/" className="back-btn" style={{whiteSpace:'nowrap'}}>← Back</Link>
+          <BackButton to="/" label="Back" />
         </div>
       </div>
 

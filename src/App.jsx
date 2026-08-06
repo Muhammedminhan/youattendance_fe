@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { SearchProvider } from './context/SearchContext';
 import Sidebar from './components/Sidebar';
+import SearchOverlay from './components/SearchOverlay';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
@@ -16,12 +18,15 @@ function ProtectedRoute() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
   return (
-    <div style={{display:'flex',minHeight:'100vh'}}>
-      <Sidebar />
-      <div style={{flex:1,marginLeft:'220px',minWidth:0,position:'relative'}}>
-        <Outlet />
+    <SearchProvider>
+      <div style={{display:'flex',minHeight:'100vh'}}>
+        <Sidebar />
+        <div style={{flex:1,marginLeft:'220px',minWidth:0,position:'relative'}}>
+          <Outlet />
+        </div>
+        <SearchOverlay />
       </div>
-    </div>
+    </SearchProvider>
   );
 }
 

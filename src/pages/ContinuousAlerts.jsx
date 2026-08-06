@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import BackButton from '../components/BackButton';
 
 // TODO: replace with api call
 const ALERTS = [
@@ -109,7 +110,7 @@ export default function ContinuousAlerts() {
       `}</style>
 
       <div style={{display:'flex',alignItems:'center',gap:'14px',marginBottom:'22px',flexWrap:'wrap'}}>
-        <Link to="/" className="back-btn">← Dashboard</Link>
+        <BackButton to="/" label="Dashboard" />
         <div className="page-title" style={{fontSize:'18px',display:'flex',alignItems:'center',gap:'8px'}}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 0 1 6 6c0 3.5 1.5 5 1.5 5H2.5S4 11.5 4 8a6 6 0 0 1 6-6z" fill="rgba(239,68,68,.90)"/><path d="M8 15.5a2 2 0 0 0 4 0" stroke="rgba(239,68,68,.90)" strokeWidth="1.5" fill="none" strokeLinecap="round"/><circle cx="15" cy="4" r="3" fill="#ef4444"/></svg>
           Continuous Leave Alerts

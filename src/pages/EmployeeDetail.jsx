@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
+import BackButton from '../components/BackButton';
 import { useEffect, useRef, useState } from 'react';
 import { Chart, registerables } from 'chart.js';
 import { EMPS, ALL } from '../data/employees';
@@ -157,7 +158,7 @@ export default function EmployeeDetail() {
         @media(max-width:780px){.two-col{grid-template-columns:1fr}.mini-stats{grid-template-columns:repeat(2,1fr)}}
       `}</style>
 
-      <Link to="/employees" className="back-btn" style={{display:'inline-flex',marginBottom:'20px'}}>← Back to Employees</Link>
+      <BackButton to="/employees" label="Back to Employees" />
 
       {/* Hero */}
       <div className="hero g" style={{background:emp.color}}>

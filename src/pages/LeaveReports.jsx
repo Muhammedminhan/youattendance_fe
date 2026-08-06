@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import BackButton from '../components/BackButton';
 
 const TYPE_META = {
   Annual:    { color:'#2563EB', rgb:'37,99,235',  bar:'linear-gradient(90deg,#2563EB,#60a5fa)' },
@@ -125,7 +125,7 @@ export default function LeaveReports() {
             <div className="page-sub">Analytics, top takers, and balance alerts</div>
           </div>
         </div>
-        <Link to="/" className="back-btn">← Back</Link>
+        <BackButton to="/" label="Back" />
       </div>
 
       <div className="two-col-r" style={{marginBottom:'16px'}}>

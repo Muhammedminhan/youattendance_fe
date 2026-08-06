@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import BackButton from '../components/BackButton';
 import { EMPS, ALL } from '../data/employees';
 import { Chart } from 'chart.js';
 import { useTheme } from '../context/ThemeContext';
@@ -212,7 +213,7 @@ export default function Compare() {
             <div className="page-sub">Side-by-side leave analysis</div>
           </div>
         </div>
-        <Link to="/employees" className="back-btn">← Back</Link>
+        <BackButton to="/employees" label="Back to Employees" />
       </div>
 
       {/* Employee selector cards */}

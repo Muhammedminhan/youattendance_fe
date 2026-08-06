@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import BackButton from '../components/BackButton';
 
 const TYPE_META = {
   'Annual Leave': { color:'#2563EB', rgb:'37,99,235',  bg:'linear-gradient(135deg,#2563EB,#1E40AF)', label:'Annual'   },
@@ -97,7 +97,7 @@ export default function LeaveRecords() {
             <div className="page-sub">All leave requests and current absences</div>
           </div>
         </div>
-        <Link to="/" className="back-btn">← Back</Link>
+        <BackButton to="/" label="Back" />
       </div>
 
       {/* On leave today */}
