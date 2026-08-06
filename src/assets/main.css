@@ -11,7 +11,8 @@ html,body{
 
 /* ── Light mode background ── */
 html.light body, body {
-  background: #f5f7fa;
+  background: linear-gradient(150deg, #eef2ff 0%, #f5f7fb 28%, #f8f9fc 100%);
+  min-height: 100vh;
 }
 html.light body::before, body::before { display: none; }
 html.light body::after { display: none }
@@ -240,7 +241,7 @@ html.light .theme-btn{background:rgba(99,102,241,.08);border-color:rgba(99,102,2
 
 /* ── Stat cards ── */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
-.stat-card{border-radius:18px;padding:20px 22px}
+.stat-card{border-radius:18px;padding:20px 22px;overflow:hidden;position:relative}
 .stat-icon{font-size:26px;margin-bottom:10px;display:block;line-height:1}
 .stat-label{font-size:9px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
 .stat-val{font-size:42px;font-weight:800;letter-spacing:-.04em;line-height:1.05}
@@ -248,11 +249,11 @@ html.light .theme-btn{background:rgba(99,102,241,.08);border-color:rgba(99,102,2
 .stat-trend{display:inline-flex;align-items:center;gap:4px;margin-top:12px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700}
 .trend-up{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.25);color:#34d399}
 .trend-down{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
-html.light .stat-label{color:rgba(60,80,120,.50)}
-html.light .stat-hint{color:rgba(80,100,140,.50)}
-html.light .stat-val{color:rgba(20,24,50,.80)}
-html.light .trend-up{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.22);color:#059669}
-html.light .trend-down{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.20);color:#dc2626}
+html.light .stat-label{color:rgba(60,80,120,.46);letter-spacing:.10em}
+html.light .stat-hint{color:rgba(80,100,140,.48)}
+html.light .stat-val{color:rgba(15,20,45,.85)}
+html.light .trend-up{background:rgba(16,185,129,.10);border-color:rgba(16,185,129,.20);color:#059669}
+html.light .trend-down{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18);color:#dc2626}
 
 /* ── Ring progress ── */
 .stat-ring{position:relative;width:64px;height:64px;margin-bottom:14px}

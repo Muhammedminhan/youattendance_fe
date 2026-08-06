@@ -45,10 +45,10 @@ function useCountUp(target, duration = 900) {
 }
 
 const PALETTES = {
-  purple: { bg:'linear-gradient(135deg,#a5b4fc,#818cf8)', text:'#818cf8', shadow:'rgba(129,140,248,.22)' },
-  red:    { bg:'linear-gradient(135deg,#fca5a5,#f87171)', text:'#f87171', shadow:'rgba(248,113,113,.22)' },
-  amber:  { bg:'linear-gradient(135deg,#fde68a,#fbbf24)', text:'#d97706', shadow:'rgba(251,191,36,.22)' },
-  teal:   { bg:'linear-gradient(135deg,#6ee7b7,#34d399)', text:'#059669', shadow:'rgba(52,211,153,.22)' },
+  purple: { bg:'linear-gradient(135deg,#6366f1,#4f46e5)', text:'#6366f1', shadow:'rgba(99,102,241,.30)',  blob:'rgba(99,102,241,.07)'  },
+  red:    { bg:'linear-gradient(135deg,#ef4444,#dc2626)', text:'#e53e3e', shadow:'rgba(239,68,68,.26)',   blob:'rgba(239,68,68,.07)'   },
+  amber:  { bg:'linear-gradient(135deg,#f59e0b,#d97706)', text:'#c96c00', shadow:'rgba(245,158,11,.26)', blob:'rgba(245,158,11,.07)'  },
+  teal:   { bg:'linear-gradient(135deg,#10b981,#059669)', text:'#047857', shadow:'rgba(16,185,129,.26)',  blob:'rgba(16,185,129,.07)'  },
 };
 
 function StatCard({ label, val, color, hint, trend, trendUp, icon, pct, pctLabel }) {
@@ -59,19 +59,21 @@ function StatCard({ label, val, color, hint, trend, trendUp, icon, pct, pctLabel
           : PALETTES.teal;
   return (
     <div className="stat-card g">
-      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'14px'}}>
-        <div style={{width:'48px',height:'48px',borderRadius:'14px',background:p.bg,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 14px ${p.shadow}`,flexShrink:0}}>
+      {/* Decorative background blob */}
+      <div style={{position:'absolute',top:'-24px',right:'-24px',width:'96px',height:'96px',borderRadius:'50%',background:p.bg,opacity:.08,pointerEvents:'none'}} />
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'14px',position:'relative'}}>
+        <div style={{width:'46px',height:'46px',borderRadius:'13px',background:p.bg,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px ${p.shadow}`,flexShrink:0}}>
           {icon}
         </div>
         <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end'}}>
-          <div style={{fontSize:'17px',fontWeight:800,color:p.text}}>{pct}</div>
-          <div style={{fontSize:'9px',color:'rgba(80,100,140,.40)',fontWeight:600,letterSpacing:'.04em'}}>{pctLabel}</div>
+          <div style={{fontSize:'16px',fontWeight:800,color:p.text}}>{pct}</div>
+          <div style={{fontSize:'9px',color:'rgba(80,100,140,.38)',fontWeight:600,letterSpacing:'.05em'}}>{pctLabel}</div>
         </div>
       </div>
-      <div className="stat-label">{label}</div>
-      <div className="stat-val" style={{color:p.text}}>{animated}</div>
-      <div className="stat-hint">{hint}</div>
-      <div className={`stat-trend ${trendUp?'trend-up':'trend-down'}`}>{trend}</div>
+      <div className="stat-label" style={{position:'relative'}}>{label}</div>
+      <div className="stat-val" style={{color:p.text,position:'relative'}}>{animated}</div>
+      <div className="stat-hint" style={{position:'relative'}}>{hint}</div>
+      <div className={`stat-trend ${trendUp?'trend-up':'trend-down'}`} style={{position:'relative'}}>{trend}</div>
     </div>
   );
 }
@@ -216,7 +218,7 @@ export default function Dashboard() {
 
       {/* Hero greeting */}
       <div style={{marginBottom:'14px'}}>
-        <div className="g" style={{borderRadius:'20px',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'16px',flexWrap:'wrap',background:'linear-gradient(105deg,rgba(99,102,241,.05) 0%,rgba(255,255,255,0) 50%)'}}>
+        <div className="g" style={{borderRadius:'20px',padding:'18px 22px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'16px',flexWrap:'wrap',background:'linear-gradient(120deg,rgba(99,102,241,.10) 0%,rgba(139,92,246,.05) 45%,rgba(255,255,255,0) 75%)',borderLeft:'3px solid rgba(99,102,241,.25)'}}>
           <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
             <div style={{position:'relative',flexShrink:0}}>
               <div style={{width:'56px',height:'56px',borderRadius:'16px',background:'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 6px 20px rgba(99,102,241,.40),0 0 0 1px rgba(255,255,255,.25) inset'}}>
@@ -244,7 +246,7 @@ export default function Dashboard() {
           </div>
           <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
             <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'12px',background:'rgba(248,113,113,.08)',border:'1px solid rgba(248,113,113,.18)'}}>
-              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#fca5a5,#f87171)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#ef4444,#dc2626)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" fill="white" opacity=".9"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".9"/></svg>
               </div>
               <div>
@@ -253,7 +255,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'12px',background:'rgba(251,191,36,.08)',border:'1px solid rgba(251,191,36,.20)'}}>
-              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#fde68a,#fbbf24)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#f59e0b,#d97706)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l5.5 10H2.5L8 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" opacity=".9"/><line x1="8" y1="7" x2="8" y2="9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="11.5" r=".8" fill="white"/></svg>
               </div>
               <div>
@@ -262,7 +264,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'12px',background:'rgba(52,211,153,.08)',border:'1px solid rgba(52,211,153,.18)'}}>
-              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#6ee7b7,#34d399)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#10b981,#059669)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5" r="2" fill="white" opacity=".8"/><path d="M1 14c0-2.76 2.01-5 4.5-5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".8"/><circle cx="11" cy="5" r="2.5" fill="white" opacity=".95"/><path d="M6.5 14c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".95"/></svg>
               </div>
               <div>
