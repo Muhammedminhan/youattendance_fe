@@ -11,11 +11,33 @@ html,body{
 
 /* ── Light mode background ── */
 html.light body, body {
-  background: linear-gradient(150deg, #eef2ff 0%, #f5f7fb 28%, #f8f9fc 100%);
+  background: linear-gradient(145deg, #e8ecff 0%, #f0f3ff 20%, #f6f8fe 55%, #fafbff 100%);
   min-height: 100vh;
 }
-html.light body::before, body::before { display: none; }
-html.light body::after { display: none }
+
+/* Light mode decorative radial blobs */
+html.light body::before {
+  display: block;
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 65% 50% at 12% 4%,  rgba(99,102,241,.13) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 88% 92%, rgba(16,185,129,.09) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 75% 8%,  rgba(139,92,246,.07) 0%, transparent 50%),
+    radial-gradient(ellipse 35% 30% at 5%  85%, rgba(59,130,246,.06) 0%, transparent 50%);
+}
+
+/* Subtle dot-grid overlay for the "digital" feel */
+html.light body::after {
+  display: block;
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(99,102,241,.07) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+body::before { display: none; }
+body::after  { display: none; }
 
 /* ── Dark mode ── */
 html:not(.light) body{
@@ -64,19 +86,19 @@ html:not(.light) body::after{ display: none }
 }
 .g>*{position:relative;z-index:1}
 
-/* Light mode — clean flat white cards */
+/* Light mode — clean white cards floating on gradient bg */
 html.light .g{
   background:#ffffff;
-  border:1px solid #dde2ef;
-  box-shadow:0 1px 4px rgba(50,60,120,.06),0 4px 16px rgba(50,60,120,.05);
+  border:1px solid rgba(210,218,244,.75);
+  box-shadow:0 1px 3px rgba(50,60,120,.05),0 6px 28px rgba(99,102,241,.09),0 1px 0 rgba(255,255,255,.80) inset;
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
 }
 html.light .g::before{ display:none; }
 html.light .g:hover{
   background:#ffffff;
-  border-color:rgba(99,102,241,.20);
-  box-shadow:0 2px 8px rgba(99,102,241,.07),0 6px 20px rgba(99,102,241,.05);
+  border-color:rgba(99,102,241,.22);
+  box-shadow:0 2px 8px rgba(99,102,241,.08),0 10px 32px rgba(99,102,241,.10);
   transform:translateY(-2px) scale(1.002);
 }
 
@@ -94,10 +116,11 @@ html.light .g:hover{
   box-shadow:4px 0 40px rgba(0,0,0,.50), 1px 0 0 rgba(99,102,241,.08) inset;
 }
 html.light .sidebar{
-  background:#ffffff;
-  border-right:1px solid #e8eaf0;
-  box-shadow:none;
-  backdrop-filter:none;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border-right:1px solid rgba(210,218,244,.60);
+  box-shadow:4px 0 24px rgba(99,102,241,.06);
 }
 
 /* ── Logo ── */
