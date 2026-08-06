@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Chart, registerables } from 'chart.js';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { EMPS } from '../data/employees';
 
 Chart.register(...registerables);
@@ -111,6 +112,7 @@ const DONUT_DATA = [
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { isLight } = useTheme();
   const now = useLiveClock();
   const donutRef = useRef(null);
   const trendRef = useRef(null);
@@ -170,13 +172,16 @@ export default function Dashboard() {
       plugins: [{
         id: 'centerLabel',
         afterDraw(chart) {
+          const light = document.documentElement.classList.contains('light');
           const { ctx, chartArea: { left, right, top, bottom } } = chart;
           const cx = (left + right) / 2, cy = (top + bottom) / 2;
           ctx.save();
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillStyle = 'rgba(20,24,50,.80)'; ctx.font = '800 28px Inter,sans-serif';
+          ctx.fillStyle = light ? 'rgba(20,24,50,.82)' : 'rgba(215,225,255,.90)';
+          ctx.font = '800 28px Inter,sans-serif';
           ctx.fillText(totalDays, cx, cy - 9);
-          ctx.font = '600 9.5px Inter,sans-serif'; ctx.fillStyle = 'rgba(80,100,140,.48)'; ctx.letterSpacing = '1px';
+          ctx.font = '600 9.5px Inter,sans-serif';
+          ctx.fillStyle = light ? 'rgba(80,100,140,.48)' : 'rgba(150,170,220,.45)';
           ctx.fillText('TOTAL DAYS', cx, cy + 13);
           ctx.restore();
         }
@@ -363,16 +368,16 @@ export default function Dashboard() {
                 <div style={{display:'flex',alignItems:'center',gap:'10px',marginTop:'8px',flexWrap:'wrap'}}>
                   <span style={{fontSize:'12px',color:'rgba(80,100,140,.52)',fontWeight:500}}>{dateStr}</span>
                   <span style={{width:'3px',height:'3px',borderRadius:'50%',background:'rgba(80,100,140,.22)',flexShrink:0}} />
-                  <div style={{display:'flex',alignItems:'center',gap:'6px',padding:'4px 12px',borderRadius:'10px',background:'rgba(37,99,235,.09)',border:'1px solid rgba(37,99,235,.16)'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:'6px',padding:'4px 12px',borderRadius:'10px',background:isLight?'rgba(37,99,235,.09)':'rgba(37,99,235,.16)',border:`1px solid ${isLight?'rgba(37,99,235,.16)':'rgba(37,99,235,.30)'}`}}>
                     <span className="clock-dot" style={{width:'6px',height:'6px',borderRadius:'50%',background:'#2563EB',flexShrink:0}} />
-                    <span style={{fontSize:'12px',fontWeight:800,color:'#1D4ED8',letterSpacing:'.07em',fontVariantNumeric:'tabular-nums'}}>{timeStr}</span>
+                    <span style={{fontSize:'12px',fontWeight:800,color:isLight?'#1D4ED8':'#93c5fd',letterSpacing:'.07em',fontVariantNumeric:'tabular-nums'}}>{timeStr}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Vertical divider */}
-            <div style={{width:'1px',alignSelf:'stretch',minHeight:'52px',background:'linear-gradient(to bottom,transparent 0%,rgba(37,99,235,.18) 30%,rgba(37,99,235,.18) 70%,transparent 100%)',flexShrink:0}} />
+            <div style={{width:'1px',alignSelf:'stretch',minHeight:'52px',background:isLight?'linear-gradient(to bottom,transparent 0%,rgba(37,99,235,.18) 30%,rgba(37,99,235,.18) 70%,transparent 100%)':'linear-gradient(to bottom,transparent 0%,rgba(255,255,255,.14) 30%,rgba(255,255,255,.14) 70%,transparent 100%)',flexShrink:0}} />
 
             {/* Right: KPI metric cards */}
             <div style={{display:'flex',gap:'10px',flexWrap:'wrap'}}>
@@ -385,9 +390,9 @@ export default function Dashboard() {
                   icon:<svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5" r="2" fill="white" opacity=".8"/><path d="M1 14c0-2.76 2.01-5 4.5-5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".8"/><circle cx="11" cy="5" r="2.5" fill="white" opacity=".95"/><path d="M6.5 14c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".95"/></svg> },
               ].map(({ rgb, bg, val, sub, textColor, icon, live }) => (
                 <div key={sub} className="hero-kpi"
-                  style={{display:'flex',alignItems:'center',gap:'14px',padding:'13px 18px 13px 13px',borderRadius:'18px',background:`rgba(${rgb},.07)`,border:`1px solid rgba(${rgb},.14)`,minWidth:'132px',position:'relative',overflow:'hidden',cursor:'default'}}
-                  onMouseEnter={e => { e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.background=`rgba(${rgb},.13)`; e.currentTarget.style.boxShadow=`0 12px 36px rgba(${rgb},.22)`; e.currentTarget.style.borderColor=`rgba(${rgb},.28)`; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.background=`rgba(${rgb},.07)`; e.currentTarget.style.boxShadow=''; e.currentTarget.style.borderColor=`rgba(${rgb},.14)`; }}
+                  style={{display:'flex',alignItems:'center',gap:'14px',padding:'13px 18px 13px 13px',borderRadius:'18px',background:`rgba(${rgb},${isLight?'.07':'.13'})`,border:`1px solid rgba(${rgb},${isLight?'.14':'.26'})`,minWidth:'132px',position:'relative',overflow:'hidden',cursor:'default'}}
+                  onMouseEnter={e => { e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.background=`rgba(${rgb},${isLight?'.13':'.22'})`; e.currentTarget.style.boxShadow=`0 12px 36px rgba(${rgb},.28)`; e.currentTarget.style.borderColor=`rgba(${rgb},${isLight?'.28':'.40'})`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.background=`rgba(${rgb},${isLight?'.07':'.13'})`; e.currentTarget.style.boxShadow=''; e.currentTarget.style.borderColor=`rgba(${rgb},${isLight?'.14':'.26'})`; }}
                 >
                   {/* Corner blob */}
                   <div style={{position:'absolute',top:'-16px',right:'-16px',width:'60px',height:'60px',borderRadius:'50%',background:`rgba(${rgb},.11)`,pointerEvents:'none'}} />
@@ -398,8 +403,8 @@ export default function Dashboard() {
                   </div>
                   {/* Number + label */}
                   <div>
-                    <div style={{fontSize:'30px',fontWeight:900,color:textColor,lineHeight:1,letterSpacing:'-.04em'}}>{val}</div>
-                    <div style={{fontSize:'9.5px',fontWeight:700,color:'rgba(60,80,120,.50)',textTransform:'uppercase',letterSpacing:'.07em',marginTop:'3px'}}>{sub}</div>
+                    <div style={{fontSize:'30px',fontWeight:900,color:isLight?textColor:'rgba(220,230,255,.95)',lineHeight:1,letterSpacing:'-.04em'}}>{val}</div>
+                    <div style={{fontSize:'9.5px',fontWeight:700,color:isLight?'rgba(60,80,120,.50)':'rgba(180,195,235,.48)',textTransform:'uppercase',letterSpacing:'.07em',marginTop:'3px'}}>{sub}</div>
                   </div>
                 </div>
               ))}
