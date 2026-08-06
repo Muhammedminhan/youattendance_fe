@@ -108,7 +108,7 @@ html.light .g:hover{
 /* ── Sidebar — dark default ── */
 .sidebar{
   position:fixed;left:0;top:0;bottom:0;width:220px;z-index:100;
-  padding:16px 12px 12px;display:flex;flex-direction:column;gap:1px;
+  padding:16px 12px 12px;display:flex;flex-direction:column;gap:5px;
   background:rgba(6,7,18,.88);
   backdrop-filter:blur(28px);
   -webkit-backdrop-filter:blur(28px);
@@ -156,12 +156,12 @@ html.light .nav-group{color:rgba(80,90,130,.35)}
 /* ── Nav links — individual bubble cards ── */
 .nav-a{
   display:flex;align-items:center;gap:12px;
-  padding:10px 12px;border-radius:12px;
+  padding:10px 14px;border-radius:14px;
   font-size:13px;font-weight:600;
   text-decoration:none;
-  transition:all .18s ease;
+  transition:all .20s cubic-bezier(.34,1.2,.64,1);
   position:relative;
-  margin-bottom:2px;
+  margin-bottom:0;
   background:rgba(255,255,255,.05);
   border:1.5px solid rgba(255,255,255,.09);
   color:rgba(180,190,220,.55);
@@ -181,27 +181,29 @@ html.light .nav-group{color:rgba(80,90,130,.35)}
   box-shadow:0 8px 28px rgba(99,102,241,.32), 0 1px 0 rgba(255,255,255,.12) inset;
   transform:translateY(-2px) scale(1.01);
 }
-/* ── Light mode — flat transparent nav items ── */
+/* ── Light mode — frosted glass card nav buttons ── */
 html.light .nav-a{
-  background:transparent;
-  border:none;
-  color:rgba(55,65,110,.55);
-  box-shadow:none;
-  backdrop-filter:none;
+  background:rgba(255,255,255,.72);
+  border:1px solid rgba(210,218,244,.65);
+  color:rgba(50,62,110,.55);
+  box-shadow:0 1px 3px rgba(100,110,200,.07),0 2px 10px rgba(100,110,200,.05);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
   transform:none;
 }
 html.light .nav-a:hover{
-  background:rgba(99,102,241,.06);
-  border:none;
-  color:rgba(55,65,110,.85);
-  transform:none;
-  box-shadow:none;
+  background:rgba(255,255,255,.95);
+  border-color:rgba(99,102,241,.30);
+  color:rgba(30,40,90,.82);
+  box-shadow:0 3px 16px rgba(99,102,241,.14),0 6px 24px rgba(99,102,241,.08);
+  transform:translateX(3px);
 }
 html.light .nav-a.on{
-  background:#eef2ff;
-  border:none;
-  color:#4338ca;
-  box-shadow:none;
+  background:linear-gradient(135deg,#eef2ff 0%,#e0e7ff 100%);
+  border:1px solid rgba(99,102,241,.38);
+  border-left:3px solid #6366f1;
+  color:#3730a3;
+  box-shadow:0 3px 18px rgba(99,102,241,.22),0 1px 0 rgba(255,255,255,.70) inset;
   transform:none;
   font-weight:700;
 }
