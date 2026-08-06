@@ -5,12 +5,10 @@ import { EMPS } from '../data/employees';
 
 Chart.register(...registerables);
 
-// TODO: replace with api call — derived from local data until API is wired
 const EMP_LIST = Object.values(EMPS);
 const ACTIVE_COUNT = EMP_LIST.length;
 const ON_LEAVE_COUNT = EMP_LIST.filter(e => e.status === 'On Leave').length;
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-// Trend: sum all employees' leave per calendar month from their history
 const TREND_VALS = MONTHS.map((_, mi) =>
   EMP_LIST.reduce((sum, e) =>
     sum + e.history.filter(h => {
@@ -45,84 +43,129 @@ function useCountUp(target, duration = 900) {
 }
 
 const PALETTES = {
-  purple: { bg:'linear-gradient(135deg,#6366f1,#4f46e5)', text:'#6366f1', shadow:'rgba(99,102,241,.30)',  blob:'rgba(99,102,241,.07)'  },
-  red:    { bg:'linear-gradient(135deg,#ef4444,#dc2626)', text:'#e53e3e', shadow:'rgba(239,68,68,.26)',   blob:'rgba(239,68,68,.07)'   },
-  amber:  { bg:'linear-gradient(135deg,#f59e0b,#d97706)', text:'#c96c00', shadow:'rgba(245,158,11,.26)', blob:'rgba(245,158,11,.07)'  },
-  teal:   { bg:'linear-gradient(135deg,#10b981,#059669)', text:'#047857', shadow:'rgba(16,185,129,.26)',  blob:'rgba(16,185,129,.07)'  },
+  purple: { bg:'linear-gradient(135deg,#6366f1,#4f46e5)', text:'#6366f1', shadow:'rgba(99,102,241,.30)',  blob:'rgba(99,102,241,.07)', rgb:'99,102,241'  },
+  red:    { bg:'linear-gradient(135deg,#ef4444,#dc2626)', text:'#e53e3e', shadow:'rgba(239,68,68,.26)',   blob:'rgba(239,68,68,.07)',  rgb:'239,68,68'    },
+  amber:  { bg:'linear-gradient(135deg,#f59e0b,#d97706)', text:'#c96c00', shadow:'rgba(245,158,11,.26)', blob:'rgba(245,158,11,.07)', rgb:'245,158,11'   },
+  teal:   { bg:'linear-gradient(135deg,#10b981,#059669)', text:'#047857', shadow:'rgba(16,185,129,.26)',  blob:'rgba(16,185,129,.07)', rgb:'16,185,129'   },
 };
+
+function getPalette(color) {
+  if (color.includes('6366f1') || color.includes('4f46e5')) return PALETTES.purple;
+  if (color.includes('ef4444') || color.includes('f97316')) return PALETTES.red;
+  if (color.includes('f59e0b')) return PALETTES.amber;
+  return PALETTES.teal;
+}
 
 function StatCard({ label, val, color, hint, trend, trendUp, icon, pct, pctLabel }) {
   const animated = useCountUp(val);
-  const p = color.includes('6366f1') ? PALETTES.purple
-          : color.includes('ef4444') ? PALETTES.red
-          : color.includes('f59e0b') ? PALETTES.amber
-          : PALETTES.teal;
+  const p = getPalette(color);
+  const pctNum = parseFloat(pct);
+
   return (
-    <div className="stat-card g">
-      {/* Decorative background blob */}
-      <div style={{position:'absolute',top:'-24px',right:'-24px',width:'96px',height:'96px',borderRadius:'50%',background:p.bg,opacity:.08,pointerEvents:'none'}} />
-      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'14px',position:'relative'}}>
-        <div style={{width:'46px',height:'46px',borderRadius:'13px',background:p.bg,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px ${p.shadow}`,flexShrink:0}}>
+    <div className="stat-card g stat-card-hover">
+      {/* Large background blob */}
+      <div style={{position:'absolute',top:'-30px',right:'-30px',width:'110px',height:'110px',borderRadius:'50%',background:p.bg,opacity:.07,pointerEvents:'none',transition:'opacity .3s'}} className="stat-blob" />
+      {/* Small accent dot */}
+      <div style={{position:'absolute',bottom:'18px',right:'16px',width:'60px',height:'60px',borderRadius:'50%',background:p.bg,opacity:.04,pointerEvents:'none'}} />
+
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'12px',position:'relative'}}>
+        <div style={{width:'48px',height:'48px',borderRadius:'14px',background:p.bg,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 18px ${p.shadow}`,flexShrink:0,transition:'box-shadow .25s,transform .25s'}} className="stat-icon">
           {icon}
         </div>
-        <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end'}}>
-          <div style={{fontSize:'16px',fontWeight:800,color:p.text}}>{pct}</div>
-          <div style={{fontSize:'9px',color:'rgba(80,100,140,.38)',fontWeight:600,letterSpacing:'.05em'}}>{pctLabel}</div>
+        {/* Mini circular % badge */}
+        <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:'2px'}}>
+          <div style={{position:'relative',width:'42px',height:'42px'}}>
+            <svg width="42" height="42" viewBox="0 0 42 42" style={{transform:'rotate(-90deg)'}}>
+              <circle cx="21" cy="21" r="16" fill="none" stroke={`rgba(${p.rgb},.10)`} strokeWidth="3.5"/>
+              <circle cx="21" cy="21" r="16" fill="none" stroke={`rgba(${p.rgb},.60)`} strokeWidth="3.5"
+                strokeDasharray={`${2*Math.PI*16}`}
+                strokeDashoffset={`${2*Math.PI*16*(1 - pctNum/100)}`}
+                strokeLinecap="round"
+                style={{transition:'stroke-dashoffset 1.2s cubic-bezier(.25,.46,.45,.94)'}}
+              />
+            </svg>
+            <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column'}}>
+              <span style={{fontSize:'10px',fontWeight:800,color:p.text,lineHeight:1}}>{pct}</span>
+            </div>
+          </div>
+          <div style={{fontSize:'9px',color:'rgba(80,100,140,.38)',fontWeight:600,letterSpacing:'.05em',textTransform:'uppercase'}}>{pctLabel}</div>
         </div>
       </div>
+
       <div className="stat-label" style={{position:'relative'}}>{label}</div>
       <div className="stat-val" style={{color:p.text,position:'relative'}}>{animated}</div>
       <div className="stat-hint" style={{position:'relative'}}>{hint}</div>
       <div className={`stat-trend ${trendUp?'trend-up':'trend-down'}`} style={{position:'relative'}}>{trend}</div>
+
+      {/* Progress bar strip at bottom */}
+      <div style={{position:'absolute',bottom:0,left:0,right:0,height:'3px',background:p.bg,borderRadius:'0 0 18px 18px',opacity:.22}}/>
+      <div style={{position:'absolute',bottom:0,left:0,height:'3px',background:p.bg,borderRadius:'0 0 0 18px',width:`${pctNum}%`,opacity:.72,transition:'width 1.4s cubic-bezier(.25,.46,.45,.94)'}}/>
     </div>
   );
 }
 
+const DONUT_DATA = [
+  { label:'Annual',    pct:45, color:'#6366f1', rgb:'99,102,241'   },
+  { label:'Sick',      pct:22, color:'#ef4444', rgb:'239,68,68'    },
+  { label:'Emergency', pct:11, color:'#f59e0b', rgb:'245,158,11'   },
+  { label:'WFH',       pct:14, color:'#10b981', rgb:'16,185,129'   },
+  { label:'Unpaid',    pct:8,  color:'#94a3b8', rgb:'148,163,184'  },
+];
+
 export default function Dashboard() {
   const { user } = useAuth();
-  const [loading] = useState(false);
-  const [error] = useState(null);
   const now = useLiveClock();
   const donutRef = useRef(null);
   const trendRef = useRef(null);
   const donutChartRef = useRef(null);
   const trendChartRef = useRef(null);
+  const [hiddenSegments, setHiddenSegments] = useState([]);
+  const [period, setPeriod] = useState('year');
 
   const h = now.getHours();
   const greeting = h < 12 ? 'Good morning 👋' : h < 17 ? 'Good afternoon ☀️' : 'Good evening 🌙';
   const dateStr = now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
   const timeStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 
+  // Filtered data for period selector
+  const periodSlice = period === '3m' ? 3 : period === '6m' ? 6 : 12;
+  const filteredMonths = MONTHS.slice(0, periodSlice);
+  const filteredVals   = TREND_VALS.slice(0, periodSlice);
+
+  // Build donut chart
   useEffect(() => {
-    // Donut chart
     if (!donutRef.current) return;
     if (donutChartRef.current) donutChartRef.current.destroy();
+
+    const visibleData  = DONUT_DATA.map((d, i) => hiddenSegments.includes(i) ? 0 : (d.pct * 100) / 100 * 100);
+    const totalDays = DONUT_DATA.reduce((s, d, i) => hiddenSegments.includes(i) ? s : s + d.pct, 0);
+
     donutChartRef.current = new Chart(donutRef.current, {
       type: 'doughnut',
       data: {
-        labels: ['Annual', 'Sick', 'Emergency', 'Unpaid', 'WFH'],
+        labels: DONUT_DATA.map(d => d.label),
         datasets: [{
-          data: [45, 22, 11, 8, 14],
-          backgroundColor: ['rgba(99,102,241,.82)','rgba(239,68,68,.82)','rgba(245,158,11,.82)','rgba(148,163,184,.55)','rgba(16,185,129,.82)'],
-          hoverBackgroundColor: ['rgba(99,102,241,1)','rgba(239,68,68,1)','rgba(245,158,11,1)','rgba(148,163,184,.80)','rgba(16,185,129,1)'],
+          data: visibleData,
+          backgroundColor: DONUT_DATA.map(d => `rgba(${d.rgb},.82)`),
+          hoverBackgroundColor: DONUT_DATA.map(d => `rgba(${d.rgb},1)`),
           borderWidth: 3,
           borderColor: 'rgba(255,255,255,.90)',
           hoverBorderColor: '#ffffff',
-          hoverOffset: 10,
+          hoverOffset: 12,
           spacing: 2,
         }]
       },
       options: {
         maintainAspectRatio: false,
-        cutout: '72%',
+        cutout: '74%',
         animation: { animateRotate: true, duration: 900, easing: 'easeOutQuart' },
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(255,255,255,.92)', titleColor: 'rgba(20,24,50,.80)',
-            bodyColor: 'rgba(60,80,120,.70)', borderColor: 'rgba(0,0,0,.08)', borderWidth: 1,
-            padding: 12, cornerRadius: 12, titleFont: { size: 12, weight: '700' }, bodyFont: { size: 11 },
-            callbacks: { label: ctx => `  ${ctx.raw} days  (${Math.round(ctx.raw/100*100)}%)` }
+            backgroundColor: 'rgba(255,255,255,.96)', titleColor: 'rgba(20,24,50,.82)',
+            bodyColor: 'rgba(60,80,120,.68)', borderColor: 'rgba(0,0,0,.08)', borderWidth: 1,
+            padding: 14, cornerRadius: 14, titleFont: { size: 12, weight: '700' }, bodyFont: { size: 11 },
+            callbacks: { label: ctx => `  ${ctx.raw} days  (${ctx.raw}%)` }
           }
         }
       },
@@ -133,87 +176,144 @@ export default function Dashboard() {
           const cx = (left + right) / 2, cy = (top + bottom) / 2;
           ctx.save();
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillStyle = 'rgba(20,24,50,.75)'; ctx.font = '800 26px Inter';
-          ctx.fillText('100', cx, cy - 8);
-          ctx.font = '600 10px Inter'; ctx.fillStyle = 'rgba(80,100,140,.50)';
-          ctx.fillText('TOTAL DAYS', cx, cy + 12);
+          ctx.fillStyle = 'rgba(20,24,50,.80)'; ctx.font = '800 28px Inter,sans-serif';
+          ctx.fillText(totalDays, cx, cy - 9);
+          ctx.font = '600 9.5px Inter,sans-serif'; ctx.fillStyle = 'rgba(80,100,140,.48)'; ctx.letterSpacing = '1px';
+          ctx.fillText('TOTAL DAYS', cx, cy + 13);
           ctx.restore();
         }
       }]
     });
+    return () => donutChartRef.current?.destroy();
+  }, [hiddenSegments]);
 
-    // Bar chart
+  // Build bar chart
+  useEffect(() => {
     if (!trendRef.current) return;
     if (trendChartRef.current) trendChartRef.current.destroy();
-    const avg = TREND_VALS.reduce((a,b)=>a+b,0)/TREND_VALS.length;
-    const colors = TREND_VALS.map(v => v >= avg*1.4 ? 'rgba(239,68,68,.80)' : v >= avg ? 'rgba(245,158,11,.80)' : 'rgba(99,102,241,.75)');
+
+    const avg = filteredVals.reduce((a,b)=>a+b,0) / filteredVals.length;
+    const canvas = trendRef.current;
+    const ctx = canvas.getContext('2d');
+
+    const gradientColors = filteredVals.map(v => {
+      const isHigh = v >= avg * 1.4;
+      const isAbove = v >= avg;
+      const [r, g, b] = isHigh ? [239,68,68] : isAbove ? [245,158,11] : [99,102,241];
+      const grad = ctx.createLinearGradient(0, 0, 0, 240);
+      grad.addColorStop(0, `rgba(${r},${g},${b},.92)`);
+      grad.addColorStop(1, `rgba(${r},${g},${b},.18)`);
+      return grad;
+    });
+
+    const hoverColors = filteredVals.map(v => {
+      const isHigh = v >= avg * 1.4;
+      const isAbove = v >= avg;
+      const [r, g, b] = isHigh ? [239,68,68] : isAbove ? [245,158,11] : [99,102,241];
+      const grad = ctx.createLinearGradient(0, 0, 0, 240);
+      grad.addColorStop(0, `rgba(${r},${g},${b},1)`);
+      grad.addColorStop(1, `rgba(${r},${g},${b},.45)`);
+      return grad;
+    });
 
     const avgLinePlugin = {
       id: 'avgLine',
       afterDraw(chart) {
-        const { ctx, chartArea: { left, right }, scales: { y } } = chart;
+        const { ctx: c, chartArea: { left, right }, scales: { y } } = chart;
         const yPos = y.getPixelForValue(avg);
-        ctx.save();
-        ctx.beginPath(); ctx.moveTo(left, yPos); ctx.lineTo(right, yPos);
-        ctx.strokeStyle = 'rgba(99,102,241,.40)'; ctx.lineWidth = 1.5; ctx.setLineDash([6,4]); ctx.stroke();
+        c.save();
+        c.beginPath(); c.moveTo(left, yPos); c.lineTo(right, yPos);
+        c.strokeStyle = 'rgba(99,102,241,.35)'; c.lineWidth = 1.5; c.setLineDash([5,4]); c.stroke();
         const label = `avg ${avg.toFixed(1)}`;
-        ctx.font = '700 10px Inter';
-        const w = ctx.measureText(label).width + 16;
-        const px = right - w - 4, py = yPos - 11, ph = 18, pr = 6;
-        ctx.setLineDash([]);
-        ctx.fillStyle = 'rgba(99,102,241,.15)';
-        ctx.beginPath(); ctx.roundRect(px, py, w, ph, pr); ctx.fill();
-        ctx.fillStyle = 'rgba(99,102,241,.80)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(label, px + w/2, py + ph/2);
-        ctx.restore();
+        c.font = '700 10px Inter,sans-serif';
+        const w = c.measureText(label).width + 18;
+        const px = right - w - 4, py = yPos - 12, ph = 20, pr = 6;
+        c.setLineDash([]);
+        c.fillStyle = 'rgba(99,102,241,.12)';
+        c.beginPath(); c.roundRect(px, py, w, ph, pr); c.fill();
+        c.fillStyle = 'rgba(99,102,241,.80)'; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(label, px + w/2, py + ph/2);
+        c.restore();
       }
     };
 
     trendChartRef.current = new Chart(trendRef.current, {
       type: 'bar',
       data: {
-        labels: MONTHS,
-        datasets: [{ data: TREND_VALS, backgroundColor: colors, hoverBackgroundColor: colors.map(c => c.replace(/\.\d+\)$/, '1)')), borderRadius: { topLeft:8, topRight:8 }, borderSkipped: false, barPercentage: 0.68, categoryPercentage: 0.80 }]
+        labels: filteredMonths,
+        datasets: [{
+          data: filteredVals,
+          backgroundColor: gradientColors,
+          hoverBackgroundColor: hoverColors,
+          borderRadius: { topLeft:8, topRight:8 },
+          borderSkipped: false,
+          barPercentage: 0.68,
+          categoryPercentage: 0.80,
+          borderWidth: 0,
+        }]
       },
       options: {
         maintainAspectRatio: false,
-        animation: { duration: 900, easing: 'easeOutQuart' },
+        animation: { duration: 700, easing: 'easeOutQuart' },
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(255,255,255,.92)', titleColor: 'rgba(20,24,50,.80)',
-            bodyColor: 'rgba(60,80,120,.70)', borderColor: 'rgba(0,0,0,.08)', borderWidth: 1,
-            padding: 12, cornerRadius: 12, titleFont: { size: 12, weight: '700' }, bodyFont: { size: 11 },
+            backgroundColor: 'rgba(255,255,255,.96)', titleColor: 'rgba(20,24,50,.82)',
+            bodyColor: 'rgba(60,80,120,.68)', borderColor: 'rgba(0,0,0,.08)', borderWidth: 1,
+            padding: 14, cornerRadius: 14, titleFont: { size: 12, weight: '700' }, bodyFont: { size: 11 },
             callbacks: {
               title: ctx => ctx[0].label + ' 2026',
               label: ctx => `  ${ctx.raw} days on leave`,
-              afterLabel: ctx => ctx.raw >= avg*1.4 ? '  ⚠ High volume' : ctx.raw >= avg ? '  ↑ Above average' : '  ✓ Below average',
+              afterLabel: ctx => {
+                const v = ctx.raw, a = avg;
+                return v >= a*1.4 ? '  ⚠ High volume' : v >= a ? '  ↑ Above average' : '  ✓ Below average';
+              }
             }
           }
         },
         scales: {
-          x: { grid: { display: false }, border: { display: false }, ticks: { color: 'rgba(60,80,120,.45)', font: { size: 10, weight: '600' }, padding: 6 } },
-          y: { grid: { color: 'rgba(0,0,0,.06)', drawTicks: false }, border: { display: false, dash: [4,4] }, ticks: { color: 'rgba(60,80,120,.45)', font: { size: 10 }, padding: 8, maxTicksLimit: 5 }, beginAtZero: true }
+          x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: { color: 'rgba(60,80,120,.45)', font: { size: 10, weight: '600' }, padding: 6 }
+          },
+          y: {
+            grid: { color: 'rgba(0,0,0,.05)', drawTicks: false },
+            border: { display: false, dash: [4,4] },
+            ticks: { color: 'rgba(60,80,120,.42)', font: { size: 10 }, padding: 8, maxTicksLimit: 5 },
+            beginAtZero: true
+          }
         }
       },
       plugins: [avgLinePlugin]
     });
+    return () => trendChartRef.current?.destroy();
+  }, [period]);
 
-    return () => {
-      donutChartRef.current?.destroy();
-      trendChartRef.current?.destroy();
-    };
-  }, []);
-
-  if (loading) return <div className="loading-state">Loading...</div>;
-  if (error) return <div className="error-state">Failed to load data</div>;
+  const toggleSegment = (idx) => {
+    setHiddenSegments(prev =>
+      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    );
+  };
 
   return (
     <main className="main">
       <style>{`
-        .charts-row{display:grid;grid-template-columns:1fr 1.6fr;gap:14px;margin-bottom:16px;align-items:start}
-        .card{border-radius:18px;padding:20px 22px}
+        .charts-row{display:grid;grid-template-columns:1fr 1.65fr;gap:14px;margin-bottom:16px;align-items:start}
+        .card{border-radius:20px;padding:20px 22px}
         @media(max-width:900px){.charts-row{grid-template-columns:1fr}}
+        .stat-card-hover{transition:transform .22s cubic-bezier(.34,1.2,.64,1),box-shadow .22s ease}
+        .stat-card-hover:hover{transform:translateY(-5px)}
+        html.light .stat-card-hover:hover{box-shadow:0 12px 40px rgba(99,102,241,.16),0 4px 12px rgba(99,102,241,.10)!important}
+        .stat-card-hover:hover .stat-icon{transform:scale(1.08);box-shadow-override:yes}
+        .stat-card-hover:hover .stat-blob{opacity:.13!important}
+        .period-btn{padding:4px 12px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid transparent;transition:all .15s;letter-spacing:.04em}
+        html.light .period-btn{color:rgba(60,80,120,.55);background:transparent;border-color:transparent}
+        html.light .period-btn:hover{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.15);color:rgba(60,80,120,.85)}
+        html.light .period-btn.active{background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.22);color:#4f46e5}
+        .legend-pill{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;user-select:none;border:1px solid transparent}
+        .legend-pill:hover{transform:translateY(-1px)}
+        .chart-section-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
       `}</style>
 
       {/* Hero greeting */}
@@ -245,33 +345,25 @@ export default function Dashboard() {
             </div>
           </div>
           <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
-            <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'12px',background:'rgba(248,113,113,.08)',border:'1px solid rgba(248,113,113,.18)'}}>
-              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#ef4444,#dc2626)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" fill="white" opacity=".9"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".9"/></svg>
+            {[
+              { rgb:'248,113,113', bg:'linear-gradient(135deg,#ef4444,#dc2626)', val: Object.values(EMPS).filter(e => e.status === 'On Leave').length, sub:'On leave', textColor:'#f87171',
+                icon:<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" fill="white" opacity=".9"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".9"/></svg> },
+              { rgb:'251,191,36', bg:'linear-gradient(135deg,#f59e0b,#d97706)', val: 3, sub:'Alerts', textColor:'#d97706',
+                icon:<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l5.5 10H2.5L8 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" opacity=".9"/><line x1="8" y1="7" x2="8" y2="9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="11.5" r=".8" fill="white"/></svg> },
+              { rgb:'52,211,153', bg:'linear-gradient(135deg,#10b981,#059669)', val: Object.values(EMPS).length, sub:'Active', textColor:'#059669',
+                icon:<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5" r="2" fill="white" opacity=".8"/><path d="M1 14c0-2.76 2.01-5 4.5-5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".8"/><circle cx="11" cy="5" r="2.5" fill="white" opacity=".95"/><path d="M6.5 14c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".95"/></svg> },
+            ].map(({ rgb, bg, val, sub, textColor, icon }) => (
+              <div key={sub} style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 14px',borderRadius:'12px',background:`rgba(${rgb},.08)`,border:`1px solid rgba(${rgb},.18)`,transition:'transform .18s,box-shadow .18s',cursor:'default'}}
+                onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow=`0 6px 20px rgba(${rgb},.16)`; }}
+                onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=''; }}
+              >
+                <div style={{width:'28px',height:'28px',borderRadius:'8px',background:bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{icon}</div>
+                <div>
+                  <div style={{fontSize:'16px',fontWeight:800,color:textColor,lineHeight:1}}>{val}</div>
+                  <div style={{fontSize:'9px',fontWeight:600,color:'rgba(80,100,140,.50)',textTransform:'uppercase',letterSpacing:'.05em'}}>{sub}</div>
+                </div>
               </div>
-              <div>
-                <div style={{fontSize:'15px',fontWeight:800,color:'#f87171',lineHeight:1}}>{Object.values(EMPS).filter(e => e.status === 'On Leave').length}</div>
-                <div style={{fontSize:'9px',fontWeight:600,color:'rgba(80,100,140,.50)',textTransform:'uppercase',letterSpacing:'.05em'}}>On leave</div>
-              </div>
-            </div>
-            <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'12px',background:'rgba(251,191,36,.08)',border:'1px solid rgba(251,191,36,.20)'}}>
-              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#f59e0b,#d97706)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l5.5 10H2.5L8 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" opacity=".9"/><line x1="8" y1="7" x2="8" y2="9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="11.5" r=".8" fill="white"/></svg>
-              </div>
-              <div>
-                <div style={{fontSize:'15px',fontWeight:800,color:'#d97706',lineHeight:1}}>3</div>
-                <div style={{fontSize:'9px',fontWeight:600,color:'rgba(80,100,140,.50)',textTransform:'uppercase',letterSpacing:'.05em'}}>Alerts</div>
-              </div>
-            </div>
-            <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'12px',background:'rgba(52,211,153,.08)',border:'1px solid rgba(52,211,153,.18)'}}>
-              <div style={{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,#10b981,#059669)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5" r="2" fill="white" opacity=".8"/><path d="M1 14c0-2.76 2.01-5 4.5-5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".8"/><circle cx="11" cy="5" r="2.5" fill="white" opacity=".95"/><path d="M6.5 14c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".95"/></svg>
-              </div>
-              <div>
-                <div style={{fontSize:'15px',fontWeight:800,color:'#059669',lineHeight:1}}>{Object.values(EMPS).length}</div>
-                <div style={{fontSize:'9px',fontWeight:600,color:'rgba(80,100,140,.50)',textTransform:'uppercase',letterSpacing:'.05em'}}>Active</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -294,30 +386,84 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className="charts-row">
+        {/* Donut */}
         <div className="card g" style={{display:'flex',flexDirection:'column'}}>
-          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'4px'}}>
-            <div><div className="sec-lbl" style={{marginBottom:'1px'}}>Leave by Type</div><div style={{fontSize:'10px',color:'rgba(80,100,140,.45)'}}>Current year distribution</div></div>
-            <div style={{textAlign:'right'}}><div style={{fontSize:'16px',fontWeight:800,color:'rgba(20,24,50,.75)'}}>100</div><div style={{fontSize:'9px',color:'rgba(80,100,140,.45)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.05em'}}>total days</div></div>
-          </div>
-          <div style={{display:'flex',flexWrap:'wrap',gap:'4px',marginBottom:'6px'}}>
-            {[['#6366f1','Annual 45%'],['#ef4444','Sick 22%'],['#f59e0b','Emergency 11%'],['#10b981','WFH 14%'],['#94a3b8','Unpaid 8%']].map(([c,l]) => (
-              <span key={l} style={{display:'flex',alignItems:'center',gap:'4px',padding:'3px 10px',borderRadius:'20px',background:`rgba(${c==='#6366f1'?'99,102,241':c==='#ef4444'?'239,68,68':c==='#f59e0b'?'245,158,11':c==='#10b981'?'16,185,129':'148,163,184'},.10)`,border:`1px solid rgba(${c==='#6366f1'?'99,102,241':c==='#ef4444'?'239,68,68':c==='#f59e0b'?'245,158,11':c==='#10b981'?'16,185,129':'148,163,184'},.20)`,fontSize:'10px',fontWeight:700,color:c}}>
-                <span style={{width:'6px',height:'6px',borderRadius:'50%',background:c,display:'inline-block'}}></span>{l}
-              </span>
-            ))}
-          </div>
-          <div className="chart-wrap" style={{height:'200px'}}><canvas ref={donutRef}></canvas></div>
-        </div>
-
-        <div className="card g" style={{display:'flex',flexDirection:'column'}}>
-          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'8px'}}>
-            <div><div className="sec-lbl" style={{marginBottom:'1px'}}>Monthly Leave Trend</div><div style={{fontSize:'10px',color:'rgba(80,100,140,.45)'}}>Days taken per month — 2026</div></div>
-            <div style={{display:'flex',gap:'10px',alignItems:'center'}}>
-              <div style={{display:'flex',alignItems:'center',gap:'5px'}}><span style={{width:'10px',height:'10px',borderRadius:'3px',background:'#6366f1',display:'inline-block',opacity:.75}}></span><span style={{fontSize:'10px',color:'rgba(80,100,140,.55)',fontWeight:600}}>Below avg</span></div>
-              <div style={{display:'flex',alignItems:'center',gap:'5px'}}><span style={{width:'10px',height:'10px',borderRadius:'3px',background:'#f59e0b',display:'inline-block',opacity:.75}}></span><span style={{fontSize:'10px',color:'rgba(80,100,140,.55)',fontWeight:600}}>Above avg</span></div>
-              <div style={{display:'flex',alignItems:'center',gap:'5px'}}><span style={{width:'10px',height:'10px',borderRadius:'3px',background:'#ef4444',display:'inline-block',opacity:.75}}></span><span style={{fontSize:'10px',color:'rgba(80,100,140,.55)',fontWeight:600}}>High</span></div>
+          <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'12px'}}>
+            <div className="chart-section-icon" style={{background:'linear-gradient(135deg,rgba(99,102,241,.15),rgba(99,102,241,.08))'}}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6" stroke="#6366f1" strokeWidth="1.5" fill="none" opacity=".5"/>
+                <path d="M8 2 A6 6 0 0 1 14 8" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+                <circle cx="8" cy="8" r="2.5" fill="#6366f1" opacity=".25"/>
+              </svg>
+            </div>
+            <div style={{flex:1}}>
+              <div className="sec-lbl" style={{marginBottom:'1px'}}>Leave by Type</div>
+              <div style={{fontSize:'10px',color:'rgba(80,100,140,.45)'}}>Current year — click legend to filter</div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontSize:'18px',fontWeight:800,color:'rgba(20,24,50,.78)'}}>{DONUT_DATA.filter((_,i)=>!hiddenSegments.includes(i)).reduce((s,d)=>s+d.pct,0)}</div>
+              <div style={{fontSize:'9px',color:'rgba(80,100,140,.45)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.05em'}}>days</div>
             </div>
           </div>
+
+          {/* Interactive legend */}
+          <div style={{display:'flex',flexWrap:'wrap',gap:'5px',marginBottom:'8px'}}>
+            {DONUT_DATA.map((d, i) => {
+              const hidden = hiddenSegments.includes(i);
+              return (
+                <button key={d.label} className="legend-pill" onClick={() => toggleSegment(i)}
+                  style={{
+                    background: hidden ? 'rgba(0,0,0,.04)' : `rgba(${d.rgb},.10)`,
+                    border: `1px solid rgba(${d.rgb},${hidden ? '.12' : '.22'})`,
+                    color: hidden ? 'rgba(80,100,140,.35)' : d.color,
+                    textDecoration: hidden ? 'line-through' : 'none',
+                    opacity: hidden ? .55 : 1,
+                  }}>
+                  <span style={{width:'7px',height:'7px',borderRadius:'50%',background:hidden?'#ccc':d.color,display:'inline-block',flexShrink:0}}/>
+                  {d.label} {d.pct}%
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="chart-wrap" style={{height:'190px'}}><canvas ref={donutRef}></canvas></div>
+        </div>
+
+        {/* Bar chart */}
+        <div className="card g" style={{display:'flex',flexDirection:'column'}}>
+          <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'12px'}}>
+            <div className="chart-section-icon" style={{background:'linear-gradient(135deg,rgba(99,102,241,.15),rgba(99,102,241,.08))'}}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="1" y="8" width="3" height="7" rx="1.2" fill="#6366f1" opacity=".55"/>
+                <rect x="5.5" y="5" width="3" height="10" rx="1.2" fill="#6366f1" opacity=".75"/>
+                <rect x="10" y="2" width="3" height="13" rx="1.2" fill="#6366f1" opacity=".95"/>
+              </svg>
+            </div>
+            <div style={{flex:1}}>
+              <div className="sec-lbl" style={{marginBottom:'1px'}}>Monthly Leave Trend</div>
+              <div style={{fontSize:'10px',color:'rgba(80,100,140,.45)'}}>Days taken per month — 2026</div>
+            </div>
+            {/* Period filter */}
+            <div style={{display:'flex',gap:'3px',background:'rgba(99,102,241,.06)',borderRadius:'10px',padding:'3px'}}>
+              {[['3m','3M'],['6m','6M'],['year','All']].map(([key, lbl]) => (
+                <button key={key} className={`period-btn${period===key?' active':''}`}
+                  onClick={() => setPeriod(key)}
+                  style={{background:period===key?'rgba(99,102,241,.14)':'transparent',borderColor:period===key?'rgba(99,102,241,.22)':'transparent',color:period===key?'#4f46e5':'rgba(60,80,120,.55)'}}
+                >{lbl}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div style={{display:'flex',gap:'10px',alignItems:'center',marginBottom:'8px'}}>
+            {[['#6366f1','Below avg'],['#f59e0b','Above avg'],['#ef4444','High']].map(([c,l]) => (
+              <div key={l} style={{display:'flex',alignItems:'center',gap:'5px'}}>
+                <span style={{width:'10px',height:'10px',borderRadius:'3px',background:c,display:'inline-block',opacity:.75}}/>
+                <span style={{fontSize:'10px',color:'rgba(80,100,140,.55)',fontWeight:600}}>{l}</span>
+              </div>
+            ))}
+          </div>
+
           <div className="chart-wrap" style={{height:'220px'}}><canvas ref={trendRef}></canvas></div>
         </div>
       </div>
