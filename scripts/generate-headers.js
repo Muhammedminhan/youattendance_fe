@@ -43,6 +43,7 @@ function vercelConfig(csp) {
   return (
     JSON.stringify(
       {
+        rewrites: [{ source: '/(.*)', destination: '/index.html' }],
         headers: [
           {
             source: '/(.*)',
@@ -64,20 +65,39 @@ function vercelConfig(csp) {
 
 function nginxConf(csp) {
   return (
-    '# YOUAttendance — Nginx security headers\n' +
-    '# Paste inside your server { } block, or include with:\n' +
-    '#   include /path/to/nginx-security-headers.conf;\n' +
+    '# YOUAttendance — Nginx configuration\n' +
+    '# 1. Copy your dist/ build to the server (e.g. /var/www/youattendance)\n' +
+    '# 2. Paste this block inside your server { } block:\n' +
+    '#      include /path/to/nginx-security-headers.conf;\n' +
     '# Re-run `node scripts/generate-headers.js` after changing VITE_API_BASE_URL.\n' +
     '\n' +
-    'add_header X-Frame-Options "DENY" always;\n' +
-    'add_header X-Content-Type-Options "nosniff" always;\n' +
-    'add_header Referrer-Policy "strict-origin-when-cross-origin" always;\n' +
-    'add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;\n' +
-    `add_header Content-Security-Policy "${csp}" always;\n`
+    'location / {\n' +
+    '    root /var/www/youattendance;   # <- update to your actual dist path\n' +
+    '    index index.html;\n' +
+    '    try_files $uri $uri/ /index.html;  # SPA fallback routing\n' +
+    '\n' +
+    '    add_header X-Frame-Options "DENY" always;\n' +
+    '    add_header X-Content-Type-Options "nosniff" always;\n' +
+    '    add_header Referrer-Policy "strict-origin-when-cross-origin" always;\n' +
+    '    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;\n' +
+    `    add_header Content-Security-Policy "${csp}" always;\n` +
+    '}\n'
   );
 }
 
 const apiUrl = process.env.VITE_API_BASE_URL ?? '';
+
+if (apiUrl) {
+  try {
+    new URL(apiUrl);
+  } catch {
+    console.error(
+      `[generate-headers] ERROR: VITE_API_BASE_URL="${apiUrl}" is not a valid URL. Fix it and retry.`,
+    );
+    process.exit(1);
+  }
+}
+
 const csp = buildCsp(apiUrl);
 
 writeFileSync('public/_headers', netlifyHeaders(csp));
