@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -17,6 +17,12 @@ export default function ProfileModal({ onClose }) {
 
   const nameError = nameDirty && name.trim().length === 0 ? 'Name cannot be empty.' : '';
   const hasChanges = newFile !== null || name.trim() !== (user?.name || '').trim();
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   function handleFileChange(e) {
     const file = e.target.files[0];
@@ -72,6 +78,9 @@ export default function ProfileModal({ onClose }) {
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Profile settings"
       style={{display:'flex',position:'fixed',inset:0,zIndex:500,alignItems:'center',justifyContent:'center',
         background:'rgba(1,4,9,.70)',backdropFilter:'blur(4px)'}}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -131,7 +140,7 @@ export default function ProfileModal({ onClose }) {
             </div>
           </div>
           <div style={{fontSize:'11px',color:textSub}}>Click photo to change (max 200 KB)</div>
-          <input ref={fileRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleFileChange}/>
+          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" style={{display:'none'}} onChange={handleFileChange}/>
           {sizeWarning && (
             <div style={{display:'flex',alignItems:'flex-start',gap:'6px',fontSize:'11px',
               color:isLight?'#B45309':'#fcd34d',textAlign:'left',maxWidth:'280px',lineHeight:1.5,
@@ -160,6 +169,7 @@ export default function ProfileModal({ onClose }) {
             onChange={(e) => { setName(e.target.value); setNameDirty(true); }}
             onBlur={() => setNameDirty(true)}
             placeholder="Your name"
+            maxLength={100}
             style={{
               width:'100%',padding:'10px 14px',borderRadius:'8px',
               background:inputBg,

@@ -27,18 +27,21 @@ function useLiveClock() {
   return now;
 }
 
+
 function useCountUp(target, duration = 900) {
   const [val, setVal] = useState(0);
   useEffect(() => {
     const start = performance.now();
+    let rafId;
     function tick(ts) {
       const progress = Math.min((ts - start) / duration, 1);
       const ease = 1 - Math.pow(1 - progress, 3);
       setVal(Math.round(ease * target));
-      if (progress < 1) requestAnimationFrame(tick);
+      if (progress < 1) rafId = requestAnimationFrame(tick);
       else setVal(target);
     }
-    requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [target, duration]);
   return val;
 }
@@ -210,18 +213,17 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { isLight } = useTheme();
   const now = useLiveClock();
+  const h = now.getHours();
+  const greetWord  = h < 12 ? 'Good morning'   : h < 17 ? 'Good afternoon' : 'Good evening';
+  const greetEmoji = h < 12 ? '👋'              : h < 17 ? '☀️'             : '🌙';
+  const dateStr = now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const timeStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
   const donutRef = useRef(null);
   const trendRef = useRef(null);
   const donutChartRef = useRef(null);
   const trendChartRef = useRef(null);
   const [hiddenSegments, setHiddenSegments] = useState([]);
   const [period, setPeriod] = useState('year');
-
-  const h = now.getHours();
-  const greetWord  = h < 12 ? 'Good morning'   : h < 17 ? 'Good afternoon' : 'Good evening';
-  const greetEmoji = h < 12 ? '👋'              : h < 17 ? '☀️'             : '🌙';
-  const dateStr = now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-  const timeStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 
   // Filtered data for period selector
   const periodSlice = period === '3m' ? 3 : period === '6m' ? 6 : 12;
@@ -233,7 +235,7 @@ export default function Dashboard() {
     if (!donutRef.current) return;
     if (donutChartRef.current) donutChartRef.current.destroy();
 
-    const visibleData  = DONUT_DATA.map((d, i) => hiddenSegments.includes(i) ? 0 : (d.pct * 100) / 100 * 100);
+    const visibleData  = DONUT_DATA.map((d, i) => hiddenSegments.includes(i) ? 0 : d.pct);
     const totalDays = DONUT_DATA.reduce((s, d, i) => hiddenSegments.includes(i) ? s : s + d.pct, 0);
 
     donutChartRef.current = new Chart(donutRef.current, {

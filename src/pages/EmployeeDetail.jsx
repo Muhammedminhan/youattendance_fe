@@ -42,13 +42,17 @@ export default function EmployeeDetail() {
   const navigate = useNavigate();
   const { isLight } = useTheme();
   const emp = EMPS[id];
-  if (!emp) return <Navigate to="/employees" replace />;
 
+  // All hooks must be declared before any conditional return (Rules of Hooks)
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const [searchHist, setSearchHist] = useState('');
   const [reportOpen, setReportOpen] = useState(false);
-  const [compareTarget, setCompareTarget] = useState(ALL.find(e => e.id !== emp.id)?.id || 'EMP002');
+  const [compareTarget, setCompareTarget] = useState(
+    ALL.find(e => e.id !== id)?.id || 'EMP002'
+  );
+
+  if (!emp) return <Navigate to="/employees" replace />;
 
   const initials = emp.name.split(' ').map(w => w[0]).join('').slice(0,2);
 

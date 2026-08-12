@@ -78,6 +78,10 @@ export default function Sidebar() {
         <div style={{padding:'4px 0 4px',marginTop:'auto'}}>
           <div
             onClick={() => setProfileOpen(true)}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setProfileOpen(true)}
+            role="button"
+            tabIndex={0}
+            aria-label="Open profile settings"
             className="sb-user-row"
             style={{
               display:'flex',alignItems:'center',gap:'10px',

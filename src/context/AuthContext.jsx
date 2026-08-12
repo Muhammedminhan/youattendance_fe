@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -20,9 +20,14 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    const currentUser = user;
     localStorage.removeItem('yd-user');
-    if (window.google && window.google.accounts) {
+    localStorage.removeItem('yd-custom-picture');
+    if (window.google?.accounts?.id) {
       window.google.accounts.id.disableAutoSelect();
+      if (currentUser?.email) {
+        window.google.accounts.id.revoke(currentUser.email, () => {});
+      }
     }
     setUser(null);
   }
@@ -36,8 +41,14 @@ export function AuthProvider({ children }) {
     return localStorage.getItem('yd-custom-picture') || (user && user.picture) || '';
   }
 
+  const value = useMemo(
+    () => ({ user, login, logout, updateUser, getEffectivePicture }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user]
+  );
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, getEffectivePicture }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

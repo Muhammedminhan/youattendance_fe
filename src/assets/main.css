@@ -407,12 +407,32 @@ html.light .empty{color:rgba(80,100,140,.40)}
   50%{opacity:.45}
 }
 
-/* ── Responsive ── */
+/* ── Main content area (sidebar offset) ── */
+.main-content{
+  margin-left:220px;
+}
 @media(max-width:768px){
   .sidebar{display:none}
-  .main{margin-left:0;padding:16px}
+  .main-content{margin-left:0}
+  .main{padding:16px}
   .stats-row{grid-template-columns:repeat(2,1fr)}
 }
+
+/* ── Focus visible — keyboard navigation ring ── */
+:focus-visible{
+  outline:2px solid #2563eb;
+  outline-offset:2px;
+  border-radius:4px;
+}
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible{
+  outline:2px solid #2563eb;
+  outline-offset:3px;
+  border-radius:6px;
+}
+html.light :focus-visible{ outline-color:#1d4ed8; }
+html:not(.light) :focus-visible{ outline-color:#60a5fa; }
 
 /* ── Hero greeting text — light vs dark mode ── */
 html.light .hero-greeting {
