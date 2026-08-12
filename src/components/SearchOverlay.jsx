@@ -1,21 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EMPS } from '../data/employees';
 import { useTheme } from '../context/ThemeContext';
 import { useSearch } from '../context/SearchContext';
+import { getCachedEmployees, empInitials } from '../api/employeeCache';
 
-const EMP_LIST = Object.values(EMPS);
 const AVATAR_COLORS = ['#2563EB','#E11D48','#D97706','#059669','#7C3AED','#0891B2','#4F46E5'];
 function avatarColor(name) {
   let h = 0;
-  for (const c of name) h = (h * 31 + c.charCodeAt(0)) % AVATAR_COLORS.length;
+  for (const c of (name || '')) h = (h * 31 + c.charCodeAt(0)) % AVATAR_COLORS.length;
   return AVATAR_COLORS[h];
 }
 
 const STATUS_CHIP = {
-  'On Leave':    { bg:'rgba(225,29,72,.12)',  textL:'#BE123C', textD:'#fda4af' },
-  'Low Balance': { bg:'rgba(217,119,6,.10)',  textL:'#B45309', textD:'#fcd34d' },
-  'Active':      { bg:'rgba(5,150,105,.10)',  textL:'#047857', textD:'#6ee7b7' },
+  Active:   { bg:'rgba(5,150,105,.10)',  textL:'#047857', textD:'#6ee7b7' },
+  Probation:{ bg:'rgba(217,119,6,.10)',  textL:'#B45309', textD:'#fcd34d' },
+  Terminated:{ bg:'rgba(225,29,72,.12)', textL:'#BE123C', textD:'#fda4af' },
+  Resigned: { bg:'rgba(225,29,72,.12)',  textL:'#BE123C', textD:'#fda4af' },
 };
 
 const PAGES = [
@@ -39,10 +39,15 @@ export default function SearchOverlay() {
   const { open, closeSearch } = useSearch();
   const [query, setQuery] = useState('');
   const [cursor, setCursor] = useState(0);
+  const [empList, setEmpList] = useState([]);
   const inputRef = useRef();
   const listRef = useRef();
   const navigate = useNavigate();
   const { isLight } = useTheme();
+
+  useEffect(() => {
+    getCachedEmployees().then(setEmpList).catch(() => {});
+  }, []);
 
   function close() { closeSearch(); setQuery(''); setCursor(0); }
 
@@ -54,13 +59,18 @@ export default function SearchOverlay() {
   const filteredPages = q
     ? PAGES.filter(p => p.label.toLowerCase().includes(q) || p.sub.toLowerCase().includes(q))
     : PAGES;
-  const filteredEmps = EMP_LIST.filter(e =>
-    !q || e.name.toLowerCase().includes(q) || e.dept.toLowerCase().includes(q) || e.id.toLowerCase().includes(q)
+  const filteredEmps = empList.filter(e =>
+    !q ||
+    (e.employee_name || '').toLowerCase().includes(q) ||
+    (e.email || '').toLowerCase().includes(q) ||
+    (e.employee_id || '').toLowerCase().includes(q)
   );
 
   const sections = [];
   if (filteredPages.length) sections.push({ title: q ? 'Pages' : 'Quick Navigation', items: filteredPages.map(p => ({ ...p, _type:'page' })) });
-  if (filteredEmps.length)  sections.push({ title: 'Employees',  items: filteredEmps.map(e => ({ ...e, path:`/employees/${e.id}`, label:e.name, _type:'emp' })) });
+  if (filteredEmps.length)  sections.push({ title: 'Employees',  items: filteredEmps.map(e => ({
+    ...e, path:`/employees/${e.employee_id}`, label: e.employee_name, _type:'emp',
+  })) });
 
   const flat = sections.flatMap(s => s.items);
   const clampedCursor = Math.min(cursor, flat.length - 1);
@@ -186,10 +196,10 @@ export default function SearchOverlay() {
                         </div>
                       ) : (
                         <div style={{width:'30px',height:'30px',borderRadius:'9px',flexShrink:0,
-                          background:`linear-gradient(135deg,${avatarColor(item.name)},${avatarColor(item.name)}cc)`,
+                          background:`linear-gradient(135deg,${avatarColor(item.label)},${avatarColor(item.label)}cc)`,
                           display:'flex',alignItems:'center',justifyContent:'center',
                           fontSize:'11px',fontWeight:800,color:'#fff'}}>
-                          {item.name.split(' ').map(w=>w[0]).join('').slice(0,2)}
+                          {empInitials(item.label)}
                         </div>
                       )}
 
@@ -201,19 +211,23 @@ export default function SearchOverlay() {
                         </div>
                         <div style={{fontSize:'11px',color:textSub,
                           overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                          {item._type === 'emp' ? item.dept : item.sub}
+                          {item._type === 'emp'
+                            ? (item.email || `${item.shift_start_time}–${item.shift_end_time}`)
+                            : item.sub}
                         </div>
                       </div>
 
                       {/* Status chip for employees */}
-                      {sc && (
-                        <span style={{fontSize:'10px',fontWeight:700,padding:'2px 8px',borderRadius:'20px',
-                          background:sc.bg,
-                          color:isLight?sc.textL:sc.textD,
-                          flexShrink:0,whiteSpace:'nowrap'}}>
-                          {item.status}
-                        </span>
-                      )}
+                      {item._type === 'emp' && (() => {
+                        const chip = STATUS_CHIP[item.status] || STATUS_CHIP.Active;
+                        return (
+                          <span style={{fontSize:'10px',fontWeight:700,padding:'2px 8px',borderRadius:'20px',
+                            background:chip.bg,color:isLight?chip.textL:chip.textD,
+                            flexShrink:0,whiteSpace:'nowrap'}}>
+                            {item.status}
+                          </span>
+                        );
+                      })()}
 
                       {/* Arrow hint */}
                       {isActive && (

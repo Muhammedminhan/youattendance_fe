@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { useEffect, useState } from 'react';
 import { SearchProvider } from './context/SearchContext';
 import Sidebar from './components/Sidebar';
 import SearchOverlay from './components/SearchOverlay';
@@ -31,8 +32,35 @@ function NotFound() {
 }
 
 function ProtectedRoute() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setChecked(true); return; }
+    const token = localStorage.getItem('yd-token');
+    if (!token) { logout(); setChecked(true); return; }
+    fetch('/api/v1/auth/me/', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => {
+        if (data.state !== 'success') logout();
+        setChecked(true);
+      })
+      .catch(() => setChecked(true)); // network down — allow through, don't log out
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (!user) return <Navigate to="/login" replace />;
+  if (!checked) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',
+      fontFamily:'Inter,sans-serif',gap:'10px',color:'rgba(100,116,139,.55)',fontSize:'13px'}}>
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{animation:'spin .7s linear infinite'}}>
+        <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="2" opacity=".25" fill="none"/>
+        <path d="M9 2a7 7 0 017 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      </svg>
+      Verifying session…
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
   return (
     <SearchProvider>
       <div style={{display:'flex',minHeight:'100vh'}}>

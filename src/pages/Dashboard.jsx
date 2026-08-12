@@ -2,21 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Chart, registerables } from 'chart.js';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { EMPS } from '../data/employees';
+import { getCachedEmployees, empColor, empInitials } from '../api/employeeCache';
 
 Chart.register(...registerables);
-
-const EMP_LIST = Object.values(EMPS);
-const ACTIVE_COUNT = EMP_LIST.length;
-const ON_LEAVE_COUNT = EMP_LIST.filter(e => e.status === 'On Leave').length;
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const TREND_VALS = MONTHS.map((_, mi) =>
-  EMP_LIST.reduce((sum, e) =>
-    sum + e.history.filter(h => {
-      const d = new Date(h.from); return d.getMonth() === mi;
-    }).reduce((s, h) => s + h.days, 0)
-  , 0)
-);
 
 function useLiveClock() {
   const [now, setNow] = useState(new Date());
@@ -127,10 +115,11 @@ function avatarBg(name) {
   return AVATAR_COLORS[h];
 }
 
-function TeamToday({ isLight }) {
-  const onLeave  = EMP_LIST.filter(e => e.status === 'On Leave');
-  const available = EMP_LIST.length - onLeave.length;
-  const availPct = Math.round((available / EMP_LIST.length) * 100);
+function TeamToday({ isLight, emps }) {
+  const total    = emps.length || 1;
+  const onLeave  = emps.filter(e => e.status && e.status !== 'Active');
+  const available = total - onLeave.length;
+  const availPct = Math.round((available / total) * 100);
 
   const textPri = isLight ? 'rgba(15,23,42,.88)'  : '#e6edf3';
   const textSub = isLight ? 'rgba(60,80,120,.50)' : '#8b949e';
@@ -151,7 +140,7 @@ function TeamToday({ isLight }) {
             </div>
             <div>
               <div style={{fontSize:'13px',fontWeight:700,color:textPri}}>On Leave Today</div>
-              <div style={{fontSize:'10px',color:textSub}}>{onLeave.length} of {EMP_LIST.length} staff away</div>
+              <div style={{fontSize:'10px',color:textSub}}>{onLeave.length} of {total} staff away</div>
             </div>
           </div>
           {/* Availability pill */}
@@ -175,28 +164,27 @@ function TeamToday({ isLight }) {
         ) : (
           <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
             {onLeave.map(emp => {
-              const active = emp.history.find(h => h.status === 'Active');
-              const ltc = active ? (LEAVE_TYPE_COLOR[active.type] || LEAVE_TYPE_COLOR['Annual Leave']) : LEAVE_TYPE_COLOR['Annual Leave'];
+              const statusRgb = '217,119,6';
               return (
-                <div key={emp.id} style={{display:'flex',alignItems:'center',gap:'10px',
+                <div key={emp.employee_id} style={{display:'flex',alignItems:'center',gap:'10px',
                   padding:'9px 12px',borderRadius:'10px',
-                  background:isLight?`rgba(${ltc.rgb},.05)`:`rgba(${ltc.rgb},.08)`,
-                  border:`1px solid rgba(${ltc.rgb},${isLight?'.10':'.14'})`}}>
+                  background:isLight?'rgba(217,119,6,.05)':'rgba(217,119,6,.08)',
+                  border:`1px solid rgba(${statusRgb},${isLight?'.10':'.14'})`}}>
                   <div style={{width:'32px',height:'32px',borderRadius:'9px',flexShrink:0,
-                    background:emp.color,display:'flex',alignItems:'center',justifyContent:'center',
+                    background:empColor(emp.employee_id),display:'flex',alignItems:'center',justifyContent:'center',
                     fontSize:'11px',fontWeight:800,color:'#fff',
-                    boxShadow:`0 2px 8px rgba(${ltc.rgb},.25)`}}>
-                    {emp.name.split(' ').map(w=>w[0]).join('').slice(0,2)}
+                    boxShadow:'0 2px 8px rgba(217,119,6,.25)'}}>
+                    {empInitials(emp.employee_name)}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:'12px',fontWeight:700,color:textPri,
-                      overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{emp.name}</div>
-                    <div style={{fontSize:'10px',color:textSub}}>{emp.dept}</div>
+                      overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{emp.employee_name}</div>
+                    <div style={{fontSize:'10px',color:textSub}}>{emp.employee_id}</div>
                   </div>
                   <span style={{fontSize:'10px',fontWeight:700,padding:'2px 8px',borderRadius:'20px',
-                    background:`rgba(${ltc.rgb},.12)`,color:ltc.color,flexShrink:0,whiteSpace:'nowrap',
-                    border:`1px solid rgba(${ltc.rgb},.20)`}}>
-                    {active?.type || 'On Leave'}
+                    background:`rgba(${statusRgb},.12)`,color:'#D97706',flexShrink:0,whiteSpace:'nowrap',
+                    border:`1px solid rgba(${statusRgb},.20)`}}>
+                    {emp.status}
                   </span>
                 </div>
               );
@@ -208,6 +196,8 @@ function TeamToday({ isLight }) {
     </div>
   );
 }
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -224,8 +214,22 @@ export default function Dashboard() {
   const trendChartRef = useRef(null);
   const [hiddenSegments, setHiddenSegments] = useState([]);
   const [period, setPeriod] = useState('year');
+  const [empCount, setEmpCount] = useState(null);
+  const [nonActiveCount, setNonActiveCount] = useState(null);
+  const [allEmps, setAllEmps] = useState([]);
 
-  // Filtered data for period selector
+  useEffect(() => {
+    getCachedEmployees()
+      .then(list => {
+        setAllEmps(list);
+        setEmpCount(list.length);
+        setNonActiveCount(list.filter(e => (e.status || '').toLowerCase() !== 'active').length);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Filtered data for period selector — trend requires leave history which backend doesn't have yet
+  const TREND_VALS = new Array(12).fill(0);
   const periodSlice = period === '3m' ? 3 : period === '6m' ? 6 : 12;
   const filteredMonths = MONTHS.slice(0, periodSlice);
   const filteredVals   = TREND_VALS.slice(0, periodSlice);
@@ -478,11 +482,11 @@ export default function Dashboard() {
             {/* Right: KPI metric cards */}
             <div style={{display:'flex',gap:'10px',flexWrap:'wrap'}}>
               {[
-                { rgb:'190,18,60', bg:'linear-gradient(135deg,#E11D48,#9F1239)', val:Object.values(EMPS).filter(e=>e.status==='On Leave').length, sub:'On Leave', textColor:'#BE123C', live:true,
+                { rgb:'190,18,60', bg:'linear-gradient(135deg,#E11D48,#9F1239)', val:nonActiveCount ?? '—', sub:'Non-Active', textColor:'#BE123C', live:true,
                   icon:<svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" fill="white" opacity=".9"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".9"/></svg> },
                 { rgb:'180,83,9',  bg:'linear-gradient(135deg,#D97706,#92400E)', val:3, sub:'Alerts',   textColor:'#B45309', live:false,
                   icon:<svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 2l5.5 10H2.5L8 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" opacity=".9"/><line x1="8" y1="7" x2="8" y2="9.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="11.5" r=".8" fill="white"/></svg> },
-                { rgb:'4,120,87',  bg:'linear-gradient(135deg,#059669,#047857)', val:Object.values(EMPS).length, sub:'Active Staff', textColor:'#047857', live:false,
+                { rgb:'4,120,87',  bg:'linear-gradient(135deg,#059669,#047857)', val:empCount ?? '—', sub:'Total Staff', textColor:'#047857', live:false,
                   icon:<svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5" r="2" fill="white" opacity=".8"/><path d="M1 14c0-2.76 2.01-5 4.5-5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".8"/><circle cx="11" cy="5" r="2.5" fill="white" opacity=".95"/><path d="M6.5 14c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".95"/></svg> },
               ].map(({ rgb, bg, val, sub, textColor, icon, live }) => (
                 <div key={sub} className="hero-kpi"
@@ -512,10 +516,10 @@ export default function Dashboard() {
 
       {/* Stat cards */}
       <div className="stats-row">
-        <StatCard label="Active Employees" val={ACTIVE_COUNT} color="cobalt" hint="across all departments" trend="↑ 3 from last month" trendUp pct="95%" pctLabel="capacity"
+        <StatCard label="Active Employees" val={empCount ?? 0} color="cobalt" hint="across all departments" trend="↑ 3 from last month" trendUp pct="95%" pctLabel="capacity"
           icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3.5" stroke="white" strokeWidth="1.8" fill="none" opacity=".95"/><path d="M2 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="white" strokeWidth="1.8" strokeLinecap="round" fill="none" opacity=".95"/><circle cx="18" cy="8" r="2.5" stroke="white" strokeWidth="1.6" fill="none" opacity=".60"/><path d="M21.5 20c0-2.76-1.57-5.12-3.9-6.28" stroke="white" strokeWidth="1.6" strokeLinecap="round" fill="none" opacity=".60"/></svg>}
         />
-        <StatCard label="On Leave Today" val={ON_LEAVE_COUNT} color="rose" hint="5.6% of workforce" trend="↑ 2 from yesterday" trendUp pct="5.6%" pctLabel="of staff"
+        <StatCard label="On Leave Today" val={nonActiveCount ?? 0} color="rose" hint="non-active staff" trend="—" trendUp={false} pct="—" pctLabel="of staff"
           icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="3" stroke="white" strokeWidth="1.8" fill="none" opacity=".95"/><line x1="12" y1="4" x2="12" y2="5.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" opacity=".80"/><line x1="18" y1="10" x2="16.5" y2="10" stroke="white" strokeWidth="1.6" strokeLinecap="round" opacity=".80"/><line x1="6" y1="10" x2="7.5" y2="10" stroke="white" strokeWidth="1.6" strokeLinecap="round" opacity=".80"/><line x1="3" y1="17" x2="21" y2="17" stroke="white" strokeWidth="1.8" strokeLinecap="round" opacity=".70"/><path d="M4 20 Q6.5 18.5 9 20 Q11.5 21.5 14 20 Q16.5 18.5 19 20" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity=".90"/></svg>}
         />
         <StatCard label="On Leave This Week" val={23} color="amber" hint="Mon – Fri" trend="↓ 1 from last week" trendUp={false} pct="16%" pctLabel="this week"
@@ -611,7 +615,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Team Today ── */}
-      <TeamToday isLight={isLight} />
+      <TeamToday isLight={isLight} emps={allEmps} />
 
 
     </main>
