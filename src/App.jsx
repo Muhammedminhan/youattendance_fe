@@ -37,9 +37,8 @@ function ProtectedRoute() {
 
   useEffect(() => {
     if (!user) { setChecked(true); return; }
-    const token = localStorage.getItem('yd-token');
-    if (!token) { logout(); setChecked(true); return; }
-    fetch('/api/v1/auth/me/', { headers: { Authorization: `Bearer ${token}` } })
+    // Cookie is sent automatically via credentials:'include' — no Bearer header needed
+    fetch('/api/v1/auth/me/', { credentials: 'include' })
       .then(r => {
         // Any HTTP error (including non-JSON 401 from a proxy) → reject session
         if (!r.ok) { logout(); setChecked(true); return; }

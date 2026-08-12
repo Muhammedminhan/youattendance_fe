@@ -87,7 +87,7 @@ export default function Login() {
       if (!response.ok || data.state !== 'success') {
         throw new Error(data.errors?.message || 'Verification failed');
       }
-      localStorage.setItem('yd-token', data.token);
+      // Token is now in an httpOnly cookie set by the server — not stored in JS
       saveAndRedirect(data.user);
     } catch (err) {
       setAuthError(err.message || 'Sign-in failed. Please try again.');

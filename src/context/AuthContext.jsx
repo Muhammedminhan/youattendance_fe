@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, useState } from 'react';
+import api from '../api/client';
 
 const AuthContext = createContext(null);
 
@@ -20,14 +21,14 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
-    const currentUser = user;
+    // Ask the server to clear the httpOnly yd_token cookie (fire and forget)
+    api.post('/v1/auth/logout/').catch(() => {});
     localStorage.removeItem('yd-user');
     localStorage.removeItem('yd-custom-picture');
-    localStorage.removeItem('yd-token');
     if (window.google?.accounts?.id) {
       window.google.accounts.id.disableAutoSelect();
-      if (currentUser?.email) {
-        window.google.accounts.id.revoke(currentUser.email, () => {});
+      if (user?.email) {
+        window.google.accounts.id.revoke(user.email, () => {});
       }
     }
     setUser(null);

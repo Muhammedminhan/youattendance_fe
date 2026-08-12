@@ -6,13 +6,11 @@ if (!import.meta.env.VITE_API_BASE_URL) {
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL || ''}/api`,
-  withCredentials: true,
+  withCredentials: true, // sends the httpOnly yd_token cookie automatically
 });
 
-// Attach CSRF token and session Bearer on every request
+// Attach CSRF token on state-changing requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('yd-token');
-  if (token) config.headers['Authorization'] = `Bearer ${token}`;
   if (['post', 'put', 'patch', 'delete'].includes(config.method)) {
     const match = document.cookie.match(/(^| )csrftoken=([^;]+)/);
     const csrfToken = match ? decodeURIComponent(match[2]) : null;
@@ -21,14 +19,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Redirect to login on 401 (session expired)
+// Redirect to login on 401 (session expired or invalid)
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('yd-user');
       localStorage.removeItem('yd-custom-picture');
-      localStorage.removeItem('yd-token');
+      // yd_token is an httpOnly cookie — the server clears it on logout or expiry
       window.location.href = '/login';
     }
     return Promise.reject(err);

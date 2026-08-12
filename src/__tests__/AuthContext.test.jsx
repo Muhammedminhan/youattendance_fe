@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
+// Prevent real HTTP calls from AuthContext.logout()
+vi.mock('../api/client', () => ({ default: { post: vi.fn().mockResolvedValue({}) } }));
+
 function Consumer() {
   const { user, login, logout } = useAuth();
   return (
@@ -49,14 +52,13 @@ describe('AuthContext', () => {
   });
 
   it('logout clears user and localStorage keys', async () => {
-    localStorage.setItem('yd-token', 'tok123');
+    // yd-token is now an httpOnly cookie managed by the server, not in localStorage
     localStorage.setItem('yd-custom-picture', 'data:img');
     render(<AuthProvider><Consumer /></AuthProvider>);
     await act(async () => { screen.getByText('login').click(); });
     await act(async () => { screen.getByText('logout').click(); });
     expect(screen.getByTestId('user').textContent).toBe('null');
     expect(localStorage.getItem('yd-user')).toBeNull();
-    expect(localStorage.getItem('yd-token')).toBeNull();
     expect(localStorage.getItem('yd-custom-picture')).toBeNull();
   });
 
