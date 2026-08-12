@@ -54,6 +54,7 @@ export default function Compare() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [allEmps, setAllEmps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [emp1Id, setEmp1Id] = useState(searchParams.get('emp1') || '');
   const [emp2Id, setEmp2Id] = useState(searchParams.get('emp2') || '');
   const [modalOpen, setModalOpen] = useState(false);
@@ -70,7 +71,7 @@ export default function Compare() {
         if (!ids.includes(emp2Id)) setEmp2Id(ids[1] || ids[0] || '');
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { setFetchError(true); setLoading(false); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -90,6 +91,23 @@ export default function Compare() {
       </svg>
       Loading employees…
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </main>
+  );
+
+  if (fetchError) return (
+    <main className="main" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'60vh',
+      flexDirection:'column',gap:'14px',fontFamily:'Inter,sans-serif'}}>
+      <div style={{display:'flex',alignItems:'center',gap:'10px',padding:'16px 24px',borderRadius:'14px',
+        background:'rgba(225,29,72,.06)',border:'1px solid rgba(225,29,72,.20)',
+        color:'#BE123C',fontSize:'13px',fontWeight:600}}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{flexShrink:0}}>
+          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+          <line x1="8" y1="5" x2="8" y2="9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+          <circle cx="8" cy="11.5" r=".8" fill="currentColor"/>
+        </svg>
+        Failed to load employees. Check your connection and try again.
+      </div>
+      <BackButton to="/employees" label="Back to Employees" />
     </main>
   );
 

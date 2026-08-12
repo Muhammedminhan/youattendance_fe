@@ -40,12 +40,15 @@ function ProtectedRoute() {
     const token = localStorage.getItem('yd-token');
     if (!token) { logout(); setChecked(true); return; }
     fetch('/api/v1/auth/me/', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => {
-        if (data.state !== 'success') logout();
-        setChecked(true);
+      .then(r => {
+        // Any HTTP error (including non-JSON 401 from a proxy) → reject session
+        if (!r.ok) { logout(); setChecked(true); return; }
+        return r.json().then(data => {
+          if (data.state !== 'success') logout();
+          setChecked(true);
+        });
       })
-      .catch(() => setChecked(true)); // network down — allow through, don't log out
+      .catch(() => setChecked(true)); // genuine network failure — allow through
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

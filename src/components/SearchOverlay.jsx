@@ -40,13 +40,14 @@ export default function SearchOverlay() {
   const [query, setQuery] = useState('');
   const [cursor, setCursor] = useState(0);
   const [empList, setEmpList] = useState([]);
+  const [empLoadError, setEmpLoadError] = useState(false);
   const inputRef = useRef();
   const listRef = useRef();
   const navigate = useNavigate();
   const { isLight } = useTheme();
 
   useEffect(() => {
-    getCachedEmployees().then(setEmpList).catch(() => {});
+    getCachedEmployees().then(setEmpList).catch(() => setEmpLoadError(true));
   }, []);
 
   function close() { closeSearch(); setQuery(''); setCursor(0); }
@@ -159,7 +160,20 @@ export default function SearchOverlay() {
 
         {/* Results */}
         <div ref={listRef} style={{maxHeight:'380px', overflowY:'auto', padding:'8px 8px'}}>
-          {flat.length === 0 && (
+          {empLoadError && (
+            <div style={{display:'flex',alignItems:'center',gap:'8px',margin:'6px 6px 2px',padding:'8px 12px',borderRadius:'10px',
+              background:isLight?'rgba(225,29,72,.06)':'rgba(225,29,72,.10)',
+              border:`1px solid rgba(225,29,72,${isLight?'.14':'.22'})`,
+              fontSize:'11px',color:isLight?'#BE123C':'#fda4af'}}>
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style={{flexShrink:0}}>
+                <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.3" fill="none"/>
+                <line x1="7" y1="4.5" x2="7" y2="7.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                <circle cx="7" cy="9.5" r=".7" fill="currentColor"/>
+              </svg>
+              Could not load employee list
+            </div>
+          )}
+          {flat.length === 0 && !empLoadError && (
             <div style={{textAlign:'center', padding:'32px 0', color:textSub, fontSize:'13px'}}>
               No results for "{query}"
             </div>
