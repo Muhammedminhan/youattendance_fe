@@ -23,6 +23,7 @@ export function AuthProvider({ children }) {
     const currentUser = user;
     localStorage.removeItem('yd-user');
     localStorage.removeItem('yd-custom-picture');
+    localStorage.removeItem('yd-token');
     if (window.google?.accounts?.id) {
       window.google.accounts.id.disableAutoSelect();
       if (currentUser?.email) {

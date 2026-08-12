@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -67,20 +67,32 @@ export default function Login() {
   const { user, login } = useAuth();
   const { isLight, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [verifying, setVerifying] = useState(false);
+  const [authError, setAuthError] = useState('');
 
   useEffect(() => {
     if (user) navigate('/', { replace: true });
   }, [user, navigate]);
 
-  const handleGoogleResponse = useCallback((res) => {
+  const handleGoogleResponse = useCallback(async (res) => {
+    setVerifying(true);
+    setAuthError('');
     try {
-      // NOTE: payload is decoded for display only. The credential MUST be verified
-      // server-side against Google's public keys before granting any backend access.
-      const payload = JSON.parse(atob(res.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-      // Store only non-sensitive display fields — never the raw credential/JWT.
-      saveAndRedirect({ name: payload.name, email: payload.email, picture: payload.picture, provider: 'google' });
-    } catch {
-      document.getElementById('configNotice').style.display = 'block';
+      const response = await fetch('/api/v1/auth/google/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: res.credential }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.state !== 'success') {
+        throw new Error(data.errors?.message || 'Verification failed');
+      }
+      localStorage.setItem('yd-token', data.token);
+      saveAndRedirect(data.user);
+    } catch (err) {
+      setAuthError(err.message || 'Sign-in failed. Please try again.');
+    } finally {
+      setVerifying(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [login]);
@@ -221,17 +233,43 @@ export default function Login() {
             <div className="lp-title">Welcome back</div>
             <div className="lp-sub">Sign in with your Google Workspace account<br/>to access the HR dashboard.</div>
 
-            <div id="gis-btn"/>
+            {verifying ? (
+              <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'10px',
+                padding:'14px',borderRadius:'10px',background:'rgba(37,99,235,.08)',
+                border:'1px solid rgba(37,99,235,.18)',color:'#93c5fd',fontSize:'13px',fontWeight:600}}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{animation:'spin .7s linear infinite'}}>
+                  <circle cx="8" cy="8" r="6" stroke="rgba(147,197,253,.30)" strokeWidth="2" fill="none"/>
+                  <path d="M8 2a6 6 0 016 6" stroke="#93c5fd" strokeWidth="2" strokeLinecap="round" fill="none"/>
+                </svg>
+                Verifying with server…
+              </div>
+            ) : (
+              <>
+                <div id="gis-btn"/>
+                <button className="lp-google" id="googleBtn" onClick={signInWithGoogle}>
+                  <svg width="18" height="18" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                  </svg>
+                  Continue with Google
+                </button>
+              </>
+            )}
 
-            <button className="lp-google" id="googleBtn" onClick={signInWithGoogle}>
-              <svg width="18" height="18" viewBox="0 0 48 48">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-              </svg>
-              Continue with Google
-            </button>
+            {authError && (
+              <div style={{display:'flex',alignItems:'flex-start',gap:'8px',padding:'10px 14px',
+                borderRadius:'10px',background:'rgba(225,29,72,.10)',
+                border:'1px solid rgba(225,29,72,.22)',color:'#fda4af',fontSize:'12px',lineHeight:1.5}}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{flexShrink:0,marginTop:'1px'}}>
+                  <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.3" fill="none"/>
+                  <line x1="7" y1="4.5" x2="7" y2="7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="7" cy="9.5" r=".7" fill="currentColor"/>
+                </svg>
+                {authError}
+              </div>
+            )}
 
             <div className="lp-notice" id="configNotice">
               Configure Google Client ID in Login.jsx to enable real Google sign-in.

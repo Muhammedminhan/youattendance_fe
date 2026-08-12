@@ -9,8 +9,10 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Attach CSRF token from cookie on mutating requests
+// Attach CSRF token and session Bearer on every request
 api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('yd-token');
+  if (token) config.headers['Authorization'] = `Bearer ${token}`;
   if (['post', 'put', 'patch', 'delete'].includes(config.method)) {
     const match = document.cookie.match(/(^| )csrftoken=([^;]+)/);
     const csrfToken = match ? decodeURIComponent(match[2]) : null;
@@ -26,6 +28,7 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('yd-user');
       localStorage.removeItem('yd-custom-picture');
+      localStorage.removeItem('yd-token');
       window.location.href = '/login';
     }
     return Promise.reject(err);

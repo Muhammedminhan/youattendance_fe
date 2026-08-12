@@ -1,68 +1,94 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { EMPS } from '../data/employees';
 import { useTheme } from '../context/ThemeContext';
 import BackButton from '../components/BackButton';
+import { listEmployees } from '../api/employees';
 
 function statusKey(status) {
-  if (status === 'On Leave')     return 'leave';
-  if (status === 'Low Balance')  return 'low';
+  const s = (status || '').toLowerCase();
+  if (s === 'terminated' || s === 'resigned' || s === 'deceased') return 'terminated';
+  if (s === 'probation' || s === 'notice period') return 'low';
   return 'active';
 }
 
 const STATUS_META = {
-  leave:  { rgb:'225,29,72',  ring:'rgba(225,29,72,.55)',  shadow:'rgba(225,29,72,.24)',  label:'On Leave',     darkText:'#fda4af', lightText:'#BE123C' },
-  low:    { rgb:'217,119,6',  ring:'rgba(217,119,6,.55)',  shadow:'rgba(217,119,6,.22)',  label:'Low Balance',  darkText:'#fcd34d', lightText:'#B45309' },
-  active: { rgb:'5,150,105',  ring:'rgba(5,150,105,.50)',  shadow:'rgba(5,150,105,.20)',  label:'Active',       darkText:'#6ee7b7', lightText:'#047857' },
+  terminated: { rgb:'225,29,72',  ring:'rgba(225,29,72,.55)',  shadow:'rgba(225,29,72,.24)',  label:'Terminated',   darkText:'#fda4af', lightText:'#BE123C' },
+  low:        { rgb:'217,119,6',  ring:'rgba(217,119,6,.55)',  shadow:'rgba(217,119,6,.22)',  label:'Probation',    darkText:'#fcd34d', lightText:'#B45309' },
+  active:     { rgb:'5,150,105',  ring:'rgba(5,150,105,.50)',  shadow:'rgba(5,150,105,.20)',  label:'Active',       darkText:'#6ee7b7', lightText:'#047857' },
 };
 
-function toCard(e) {
+const CARD_COLORS = [
+  'linear-gradient(135deg,#2563EB,#1E40AF)',
+  'linear-gradient(135deg,#0891B2,#0E7490)',
+  'linear-gradient(135deg,#059669,#047857)',
+  'linear-gradient(135deg,#7C3AED,#6D28D9)',
+  'linear-gradient(135deg,#D97706,#B45309)',
+  'linear-gradient(135deg,#DC2626,#B91C1C)',
+];
+
+function toCard(e, idx) {
   const sk = statusKey(e.status);
   const sm = STATUS_META[sk];
-  const totalMax = e.balance.find(b => b.name === 'Annual Leave')?.max || 20;
+  const color = CARD_COLORS[idx % CARD_COLORS.length];
   return {
-    id: e.id, name: e.name, dept: e.dept,
-    days: e.stats.total, total: totalMax,
-    statusKey: sk, statusMeta: sm,
-    color: e.color,
-    barColor: e.color.replace('135deg', '90deg'),
-    types: e.balance.filter(b => b.used > 0).map(b => b.name.replace(' Leave','')).join(', '),
+    id: e.employee_id,
+    name: e.employee_name,
+    email: e.email || '',
+    dept: `${e.shift_start_time}–${e.shift_end_time}`,
+    statusKey: sk,
+    statusMeta: sm,
+    status: e.status,
+    color,
+    barColor: color.replace('135deg', '90deg'),
   };
 }
 
 const SORT_META = {
-  'default':     { label:'Default',        icon:'⊞' },
-  'most-leave':  { label:'Most Leaves',    icon:'↓' },
-  'least-leave': { label:'Least Leaves',   icon:'↑' },
-  'on-leave':    { label:'On Leave First', icon:'◉' },
-  'low-balance': { label:'Low Balance',    icon:'⚠' },
-  'name':        { label:'Name A–Z',       icon:'A' },
-  'dept':        { label:'Department',     icon:'◫' },
+  'default':   { label:'Default',  icon:'⊞' },
+  'name':      { label:'Name A–Z', icon:'A' },
+  'on-leave':  { label:'Active',   icon:'◉' },
 };
 
-const STATUS_ORDER = { leave: 0, low: 1, active: 2 };
+const STATUS_ORDER = { active: 0, low: 1, terminated: 2 };
 
 export default function Employees() {
-  const [search, setSearch]           = useState('');
-  const [sortMode, setSortMode]       = useState('default');
+  const [search, setSearch]             = useState('');
+  const [sortMode, setSortMode]         = useState('default');
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [employees, setEmployees]       = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [apiError, setApiError]         = useState('');
   const { isLight } = useTheme();
 
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    listEmployees()
+      .then(data => { if (!cancelled) { setEmployees(data); setLoading(false); } })
+      .catch(err => {
+        if (!cancelled) {
+          setApiError(err.response?.data?.errors?.message || err.message || 'Failed to load employees');
+          setLoading(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   const sorted = useMemo(() => {
-    let list = Object.values(EMPS).map(toCard);
-    if      (sortMode === 'most-leave')  list.sort((a,b) => b.days - a.days);
-    else if (sortMode === 'least-leave') list.sort((a,b) => a.days - b.days);
-    else if (sortMode === 'on-leave')    list.sort((a,b) => (STATUS_ORDER[a.statusKey]??9) - (STATUS_ORDER[b.statusKey]??9));
-    else if (sortMode === 'low-balance') list.sort((a,b) => (a.total-a.days) - (b.total-b.days));
-    else if (sortMode === 'name')        list.sort((a,b) => a.name.localeCompare(b.name));
-    else if (sortMode === 'dept')        list.sort((a,b) => a.dept.localeCompare(b.dept));
+    let list = employees.map((e, i) => toCard(e, i));
+    if      (sortMode === 'name')     list.sort((a,b) => a.name.localeCompare(b.name));
+    else if (sortMode === 'on-leave') list.sort((a,b) => (STATUS_ORDER[a.statusKey]??9) - (STATUS_ORDER[b.statusKey]??9));
     return list;
-  }, [sortMode]);
+  }, [sortMode, employees]);
 
   const filtered = useMemo(() => {
     if (!search) return sorted;
     const t = search.toLowerCase();
-    return sorted.filter(e => e.name.toLowerCase().includes(t) || e.id.toLowerCase().includes(t));
+    return sorted.filter(e =>
+      e.name.toLowerCase().includes(t) ||
+      e.id.toLowerCase().includes(t) ||
+      e.email.toLowerCase().includes(t),
+    );
   }, [sorted, search]);
 
   return (
@@ -101,6 +127,7 @@ export default function Employees() {
 
         .search-field{position:relative;display:flex;align-items:center}
         .search-ico{position:absolute;left:11px;pointer-events:none;opacity:.40}
+        @keyframes spin{to{transform:rotate(360deg)}}
       `}</style>
 
       {/* Header */}
@@ -116,7 +143,9 @@ export default function Employees() {
           </div>
           <div>
             <div className="page-title">Employees</div>
-            <div className="page-sub">{Object.values(EMPS).filter(e => e.status !== 'Inactive').length} active employees</div>
+            <div className="page-sub">
+              {loading ? 'Loading…' : `${employees.filter(e => (e.status || '').toLowerCase() === 'active').length} active employees`}
+            </div>
           </div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap'}}>
@@ -178,83 +207,94 @@ export default function Employees() {
         )}
       </div>
 
+      {/* Loading / error states */}
+      {loading && (
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'10px',padding:'60px 0',
+          color:isLight?'rgba(60,80,120,.55)':'rgba(140,160,210,.55)',fontSize:'14px'}}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{animation:'spin .7s linear infinite'}}>
+            <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.8" opacity=".25" fill="none"/>
+            <path d="M9 2a7 7 0 017 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+          </svg>
+          Loading employees…
+        </div>
+      )}
+
+      {apiError && !loading && (
+        <div style={{display:'flex',alignItems:'center',gap:'12px',padding:'20px 24px',borderRadius:'14px',
+          background:isLight?'rgba(225,29,72,.06)':'rgba(225,29,72,.10)',
+          border:`1px solid rgba(225,29,72,${isLight?'.14':'.22'})`,
+          color:isLight?'#BE123C':'#fda4af',fontSize:'13px',marginBottom:'16px'}}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{flexShrink:0}}>
+            <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+            <line x1="8" y1="5" x2="8" y2="9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            <circle cx="8" cy="11.5" r=".8" fill="currentColor"/>
+          </svg>
+          {apiError}
+        </div>
+      )}
+
       {/* Employee grid */}
-      <div className="card-grid" id="grid">
-        {filtered.map(emp => {
-          const sm = emp.statusMeta;
-          const pct = Math.round(emp.days / emp.total * 100);
-          return (
-            <Link key={emp.id} className={`emp-card g status-${emp.statusKey}`} to={`/employees/${emp.id}`}
-              style={{
-                borderLeftColor: 'transparent',
-                '--hover-border': sm.ring.replace('.55','1'),
-              }}
-              onMouseEnter={e => e.currentTarget.style.borderLeftColor = sm.ring}
-              onMouseLeave={e => e.currentTarget.style.borderLeftColor = 'transparent'}
-            >
-              <div className="emp-top">
-                {/* Avatar with status ring */}
-                <div className="emp-avatar" style={{
-                  background: emp.color,
-                  boxShadow: `0 0 0 3px ${sm.ring}, 0 4px 14px ${sm.shadow}`,
+      {!loading && !apiError && (
+        <div className="card-grid" id="grid">
+          {filtered.map(emp => {
+            const sm = emp.statusMeta;
+            return (
+              <Link key={emp.id} className={`emp-card g status-${emp.statusKey}`} to={`/employees/${emp.id}`}
+                style={{borderLeftColor:'transparent'}}
+                onMouseEnter={e => e.currentTarget.style.borderLeftColor = sm.ring}
+                onMouseLeave={e => e.currentTarget.style.borderLeftColor = 'transparent'}
+              >
+                <div className="emp-top">
+                  <div className="emp-avatar" style={{
+                    background: emp.color,
+                    boxShadow: `0 0 0 3px ${sm.ring}, 0 4px 14px ${sm.shadow}`,
+                  }}>
+                    {(emp.name[0] || '?').toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="emp-name" style={{color:isLight?'rgba(15,23,42,.88)':'rgba(220,230,255,.92)'}}>{emp.name}</div>
+                    <div className="emp-id" style={{color:isLight?'rgba(71,85,105,.50)':'rgba(180,200,240,.40)'}}>{emp.id}</div>
+                    <div className="emp-dept" style={{color:isLight?'rgba(71,85,105,.55)':'rgba(160,180,240,.55)'}}>
+                      {emp.email || emp.dept}
+                    </div>
+                  </div>
+                </div>
+
+                <span className="status-pill" style={{
+                  background:`rgba(${sm.rgb},${isLight?'.08':'.14'})`,
+                  border:`1px solid rgba(${sm.rgb},${isLight?'.18':'.28'})`,
+                  color:isLight?sm.lightText:sm.darkText,
                 }}>
-                  {emp.name[0]}
+                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:`rgb(${sm.rgb})`,display:'inline-block',flexShrink:0}}/>
+                  {emp.status}
+                </span>
+
+                <div style={{display:'flex',alignItems:'center',gap:'6px',marginTop:'10px',fontSize:'12px',
+                  color:isLight?'rgba(60,80,120,.55)':'rgba(180,200,240,.55)'}}>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style={{flexShrink:0,opacity:.6}}>
+                    <circle cx="8" cy="6" r="3" stroke="currentColor" strokeWidth="1.3" fill="none"/>
+                    <path d="M2 15c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" fill="none"/>
+                  </svg>
+                  Shift: {emp.dept}
                 </div>
-                <div>
-                  <div className="emp-name" style={{color:isLight?'rgba(15,23,42,.88)':'rgba(220,230,255,.92)'}}>{emp.name}</div>
-                  <div className="emp-id" style={{color:isLight?'rgba(71,85,105,.50)':'rgba(180,200,240,.40)'}}>{emp.id}</div>
-                  <div className="emp-dept" style={{color:isLight?'rgba(71,85,105,.55)':'rgba(160,180,240,.55)'}}>{emp.dept}</div>
+
+                <div className="emp-footer" style={{
+                  borderTop:`1px solid ${isLight?'rgba(0,0,0,.07)':'rgba(255,255,255,.07)'}`,
+                  color:isLight?'#2563EB':'#93c5fd',
+                }}>
+                  View Profile
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    <polyline points="8,3 12,7 8,11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
-              </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
-              {/* Status badge */}
-              <span className="status-pill" style={{
-                background:`rgba(${sm.rgb},${isLight?'.08':'.14'})`,
-                border:`1px solid rgba(${sm.rgb},${isLight?'.18':'.28'})`,
-                color:isLight?sm.lightText:sm.darkText,
-              }}>
-                <span style={{width:'6px',height:'6px',borderRadius:'50%',background:`rgb(${sm.rgb})`,display:'inline-block',flexShrink:0}}/>
-                {sm.label}
-              </span>
-
-              {/* Leave types used */}
-              <div style={{display:'flex',alignItems:'center',gap:'6px',marginTop:'10px',fontSize:'12px',color:isLight?'rgba(60,80,120,.55)':'rgba(180,200,240,.55)'}}>
-                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style={{flexShrink:0,opacity:.6}}>
-                  <path d="M3 1h5.5L11 3.5V13H3V1z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" fill="none"/>
-                  <line x1="5" y1="6" x2="9" y2="6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
-                  <line x1="5" y1="8.5" x2="8" y2="8.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
-                </svg>
-                {emp.types || '—'}
-              </div>
-
-              {/* Days used progress bar */}
-              <div className="leave-bar-wrap">
-                <div className="leave-bar-label">
-                  <span style={{color:isLight?'rgba(60,80,120,.45)':'rgba(180,200,240,.45)'}}>Days Used</span>
-                  <span style={{color:isLight?'rgba(60,80,120,.60)':'rgba(180,200,240,.55)'}}>{emp.days} / {emp.total}</span>
-                </div>
-                <div className="leave-bar-bg" style={{background:isLight?'rgba(0,0,0,.07)':'rgba(255,255,255,.09)'}}>
-                  <div className="leave-bar" style={{width:`${pct}%`,background:emp.barColor}}/>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="emp-footer" style={{
-                borderTop:`1px solid ${isLight?'rgba(0,0,0,.07)':'rgba(255,255,255,.07)'}`,
-                color:isLight?'#2563EB':'#93c5fd',
-              }}>
-                View Profile
-                <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                  <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                  <polyline points="8,3 12,7 8,11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
-      {filtered.length === 0 && (
+      {!loading && !apiError && filtered.length === 0 && (
         <div className="empty">
           <div style={{width:'56px',height:'56px',borderRadius:'18px',background:isLight?'rgba(37,99,235,.09)':'rgba(37,99,235,.14)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',border:`1px solid rgba(37,99,235,${isLight?'.14':'.24'})`}}>
             <svg width="26" height="26" viewBox="0 0 16 16" fill="none" style={{opacity:.6}}>
