@@ -1,4 +1,4 @@
-import { writeFileSync } from 'fs'
+import { mkdirSync, writeFileSync } from 'fs'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -23,6 +23,7 @@ function buildCsp(apiUrl) {
     "img-src 'self' data: https://ui-avatars.com https://lh3.googleusercontent.com",
     `connect-src ${connectSrc}`,
     'frame-src https://accounts.google.com',
+    "frame-ancestors 'none'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -46,9 +47,30 @@ function cspPlugin() {
     closeBundle() {
       if (!isBuild) return
       const csp = buildCsp(process.env.VITE_API_BASE_URL ?? '')
+
       writeFileSync(
         'dist/_headers',
-        `/*\n  X-Frame-Options: DENY\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n  Content-Security-Policy: ${csp}\n`,
+        '/*\n' +
+          '  X-Frame-Options: DENY\n' +
+          '  X-Content-Type-Options: nosniff\n' +
+          '  Referrer-Policy: strict-origin-when-cross-origin\n' +
+          '  Permissions-Policy: camera=(), microphone=(), geolocation=()\n' +
+          `  Content-Security-Policy: ${csp}\n`,
+      )
+
+      mkdirSync('dist/deploy', { recursive: true })
+      writeFileSync(
+        'dist/deploy/nginx-security-headers.conf',
+        '# YOUAttendance — Nginx security headers\n' +
+          '# Paste inside your server { } block, or include with:\n' +
+          '#   include /path/to/nginx-security-headers.conf;\n' +
+          '# Re-run `node scripts/generate-headers.js` after changing VITE_API_BASE_URL.\n' +
+          '\n' +
+          'add_header X-Frame-Options "DENY" always;\n' +
+          'add_header X-Content-Type-Options "nosniff" always;\n' +
+          'add_header Referrer-Policy "strict-origin-when-cross-origin" always;\n' +
+          'add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;\n' +
+          `add_header Content-Security-Policy "${csp}" always;\n`,
       )
     },
   }

@@ -1,4 +1,4 @@
-import { writeFileSync } from 'fs';
+import { mkdirSync, writeFileSync } from 'fs';
 
 function buildCsp(apiUrl) {
   let apiOrigin = '';
@@ -28,38 +28,75 @@ function buildCsp(apiUrl) {
   ].join('; ');
 }
 
+function netlifyHeaders(csp) {
+  return (
+    '/*\n' +
+    '  X-Frame-Options: DENY\n' +
+    '  X-Content-Type-Options: nosniff\n' +
+    '  Referrer-Policy: strict-origin-when-cross-origin\n' +
+    '  Permissions-Policy: camera=(), microphone=(), geolocation=()\n' +
+    `  Content-Security-Policy: ${csp}\n`
+  );
+}
+
+function vercelConfig(csp) {
+  return (
+    JSON.stringify(
+      {
+        headers: [
+          {
+            source: '/(.*)',
+            headers: [
+              { key: 'X-Frame-Options', value: 'DENY' },
+              { key: 'X-Content-Type-Options', value: 'nosniff' },
+              { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+              { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+              { key: 'Content-Security-Policy', value: csp },
+            ],
+          },
+        ],
+      },
+      null,
+      2,
+    ) + '\n'
+  );
+}
+
+function nginxConf(csp) {
+  return (
+    '# YOUAttendance — Nginx security headers\n' +
+    '# Paste inside your server { } block, or include with:\n' +
+    '#   include /path/to/nginx-security-headers.conf;\n' +
+    '# Re-run `node scripts/generate-headers.js` after changing VITE_API_BASE_URL.\n' +
+    '\n' +
+    'add_header X-Frame-Options "DENY" always;\n' +
+    'add_header X-Content-Type-Options "nosniff" always;\n' +
+    'add_header Referrer-Policy "strict-origin-when-cross-origin" always;\n' +
+    'add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;\n' +
+    `add_header Content-Security-Policy "${csp}" always;\n`
+  );
+}
+
 const apiUrl = process.env.VITE_API_BASE_URL ?? '';
 const csp = buildCsp(apiUrl);
 
-writeFileSync(
-  'public/_headers',
-  `/*\n  X-Frame-Options: DENY\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n  Content-Security-Policy: ${csp}\n`,
-);
+writeFileSync('public/_headers', netlifyHeaders(csp));
+writeFileSync('vercel.json', vercelConfig(csp));
 
-writeFileSync(
-  'vercel.json',
-  JSON.stringify(
-    {
-      headers: [
-        {
-          source: '/(.*)',
-          headers: [
-            { key: 'X-Frame-Options', value: 'DENY' },
-            { key: 'X-Content-Type-Options', value: 'nosniff' },
-            { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-            { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-            { key: 'Content-Security-Policy', value: csp },
-          ],
-        },
-      ],
-    },
-    null,
-    2,
-  ) + '\n',
-);
+mkdirSync('deploy', { recursive: true });
+writeFileSync('deploy/nginx-security-headers.conf', nginxConf(csp));
 
-const origin = apiUrl && (() => { try { const {hostname, origin} = new URL(apiUrl); return hostname && hostname !== 'localhost' && hostname !== '127.0.0.1' ? origin : null; } catch { return null; } })();
-console.log(origin
-  ? `[generate-headers] connect-src includes API origin: ${origin}`
-  : '[generate-headers] API is same-origin — connect-src uses self only',
+const apiOrigin = (() => {
+  try {
+    const { hostname, origin } = new URL(apiUrl);
+    return hostname && hostname !== 'localhost' && hostname !== '127.0.0.1' ? origin : null;
+  } catch {
+    return null;
+  }
+})();
+
+console.log(
+  apiOrigin
+    ? `[generate-headers] connect-src includes API origin: ${apiOrigin}`
+    : '[generate-headers] API is same-origin — connect-src uses self only',
 );
