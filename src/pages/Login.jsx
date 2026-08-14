@@ -83,7 +83,16 @@ export default function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credential: res.credential }),
       });
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error(
+          response.ok
+            ? 'Unexpected server response. Please try again.'
+            : `Sign-in failed (${response.status}). Please try again.`,
+        );
+      }
       if (!response.ok || data.state !== 'success') {
         throw new Error(data.errors?.message || 'Verification failed');
       }
