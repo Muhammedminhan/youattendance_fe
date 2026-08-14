@@ -40,14 +40,14 @@ function ProtectedRoute() {
     // Cookie is sent automatically via credentials:'include' — no Bearer header needed
     fetch('/api/v1/auth/me/', { credentials: 'include' })
       .then(r => {
-        // Any HTTP error (including non-JSON 401 from a proxy) → reject session
-        if (!r.ok) { logout(); setChecked(true); return; }
+        if (r.status === 401) { logout(); setChecked(true); return; }
+        if (!r.ok) { setChecked(true); return; } // backend unavailable — allow through
         return r.json().then(data => {
           if (data.state !== 'success') logout();
           setChecked(true);
         });
       })
-      .catch(() => setChecked(true)); // genuine network failure — allow through
+      .catch(() => setChecked(true)); // network failure — allow through
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
