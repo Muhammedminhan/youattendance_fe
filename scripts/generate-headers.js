@@ -20,6 +20,7 @@ function buildCsp(apiUrl) {
     'font-src https://fonts.gstatic.com',
     "img-src 'self' data: https://ui-avatars.com https://lh3.googleusercontent.com",
     `connect-src ${connectSrc}`,
+    "worker-src blob: 'self'",
     'frame-src https://accounts.google.com',
     "frame-ancestors 'none'",
     "object-src 'none'",

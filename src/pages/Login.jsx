@@ -74,32 +74,21 @@ export default function Login() {
     if (user) navigate('/', { replace: true });
   }, [user, navigate]);
 
-  const handleGoogleResponse = useCallback(async (res) => {
+  const handleGoogleResponse = useCallback((res) => {
     setVerifying(true);
     setAuthError('');
     try {
-      const response = await fetch('/api/v1/auth/google/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: res.credential }),
+      const [, payloadB64] = res.credential.split('.');
+      const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+      if (!payload.email) throw new Error('No email in Google response');
+      saveAndRedirect({
+        email: payload.email,
+        name: payload.name || '',
+        picture: payload.picture || '',
+        provider: 'google',
       });
-      let data;
-      try {
-        data = await response.json();
-      } catch {
-        throw new Error(
-          response.ok
-            ? 'Unexpected server response. Please try again.'
-            : `Sign-in failed (${response.status}). Please try again.`,
-        );
-      }
-      if (!response.ok || data.state !== 'success') {
-        throw new Error(data.errors?.message || 'Verification failed');
-      }
-      // Token is now in an httpOnly cookie set by the server — not stored in JS
-      saveAndRedirect(data.user);
-    } catch (err) {
-      setAuthError(err.message || 'Sign-in failed. Please try again.');
+    } catch {
+      setAuthError('Sign-in failed. Please try again.');
     } finally {
       setVerifying(false);
     }

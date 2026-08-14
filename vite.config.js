@@ -22,6 +22,7 @@ function buildCsp(apiUrl) {
     'font-src https://fonts.gstatic.com',
     "img-src 'self' data: https://ui-avatars.com https://lh3.googleusercontent.com",
     `connect-src ${connectSrc}`,
+    "worker-src blob: 'self'",
     'frame-src https://accounts.google.com',
     "frame-ancestors 'none'",
     "object-src 'none'",
@@ -98,6 +99,8 @@ function cspPlugin() {
 export default defineConfig({
   plugins: [react(), cspPlugin()],
   server: {
+    port: 5173,
+    strictPort: true,
     proxy: { '/api': 'http://localhost:8000' },
     headers: {
       'X-Content-Type-Options': 'nosniff',
