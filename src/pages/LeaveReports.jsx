@@ -3,11 +3,12 @@ import { useTheme } from '../context/ThemeContext';
 import BackButton from '../components/BackButton';
 
 const TYPE_META = {
-  Annual:    { color:'#2563EB', rgb:'37,99,235',  bar:'linear-gradient(90deg,#2563EB,#60a5fa)' },
-  Sick:      { color:'#E11D48', rgb:'225,29,72',  bar:'linear-gradient(90deg,#E11D48,#fb7185)' },
-  Emergency: { color:'#D97706', rgb:'217,119,6',  bar:'linear-gradient(90deg,#D97706,#fbbf24)' },
-  WFH:       { color:'#059669', rgb:'5,150,105',  bar:'linear-gradient(90deg,#059669,#34d399)' },
-  Unpaid:    { color:'#7C3AED', rgb:'124,58,237', bar:'linear-gradient(90deg,#7C3AED,#a78bfa)' },
+  'Earned Leave':           { color:'#2563EB', rgb:'37,99,235',  bar:'linear-gradient(90deg,#2563EB,#60a5fa)' },
+  'Sick Leave':             { color:'#E11D48', rgb:'225,29,72',  bar:'linear-gradient(90deg,#E11D48,#fb7185)' },
+  'Compensatory Off':       { color:'#059669', rgb:'5,150,105',  bar:'linear-gradient(90deg,#059669,#34d399)' },
+  'Restricted Holiday':     { color:'#D97706', rgb:'217,119,6',  bar:'linear-gradient(90deg,#D97706,#fbbf24)' },
+  'FOP':                    { color:'#7C3AED', rgb:'124,58,237', bar:'linear-gradient(90deg,#7C3AED,#a78bfa)' },
+  'Earned Leave (Trainee)': { color:'#0891B2', rgb:'8,145,178',  bar:'linear-gradient(90deg,#0891B2,#38bdf8)' },
 };
 
 /* Days badge: rose >10, amber 5-10, cobalt <5 */
@@ -52,12 +53,52 @@ const TAB_DATA = {
 };
 
 const TYPE_BREAKDOWN = [
-  { key:'Annual',    width:'75%', count:348, pct:'44%' },
-  { key:'Sick',      width:'38%', count:176, pct:'22%' },
-  { key:'Emergency', width:'20%', count:91,  pct:'11%' },
-  { key:'WFH',       width:'30%', count:138, pct:'17%' },
-  { key:'Unpaid',    width:'10%', count:44,  pct:'6%'  },
+  { key:'Earned Leave',           width:'72%', count:334, pct:'40%' },
+  { key:'Sick Leave',             width:'38%', count:166, pct:'20%' },
+  { key:'Compensatory Off',       width:'27%', count:125, pct:'15%' },
+  { key:'Restricted Holiday',     width:'22%', count:100, pct:'12%' },
+  { key:'FOP',                    width:'14%', count:66,  pct:'8%'  },
+  { key:'Earned Leave (Trainee)', width:'9%',  count:41,  pct:'5%'  },
 ];
+
+const EMPLOYEE_BY_TYPE = {
+  'Earned Leave': [
+    { name:'Lisa Park',           id:'EMP007', days:24 },
+    { name:'James Chen',          id:'EMP004', days:19 },
+    { name:'Sarah Johnson',       id:'EMP002', days:15 },
+    { name:'Ravi Patel',          id:'EMP011', days:12 },
+    { name:'Mohammed Al Rashid',  id:'EMP005', days:9  },
+    { name:'Nadia Khalil',        id:'EMP009', days:8  },
+  ],
+  'Sick Leave': [
+    { name:'Nadia Khalil',        id:'EMP009', days:11 },
+    { name:'Sarah Johnson',       id:'EMP002', days:8  },
+    { name:'James Chen',          id:'EMP004', days:6  },
+    { name:'Ravi Patel',          id:'EMP011', days:4  },
+    { name:'Mohammed Al Rashid',  id:'EMP005', days:3  },
+  ],
+  'Compensatory Off': [
+    { name:'Mohammed Al Rashid',  id:'EMP005', days:10 },
+    { name:'Ravi Patel',          id:'EMP011', days:7  },
+    { name:'Lisa Park',           id:'EMP007', days:5  },
+    { name:'James Chen',          id:'EMP004', days:4  },
+  ],
+  'Restricted Holiday': [
+    { name:'Sarah Johnson',       id:'EMP002', days:6  },
+    { name:'Nadia Khalil',        id:'EMP009', days:5  },
+    { name:'Lisa Park',           id:'EMP007', days:4  },
+    { name:'Mohammed Al Rashid',  id:'EMP005', days:3  },
+  ],
+  'FOP': [
+    { name:'James Chen',          id:'EMP004', days:5  },
+    { name:'Ravi Patel',          id:'EMP011', days:4  },
+    { name:'Sarah Johnson',       id:'EMP002', days:3  },
+  ],
+  'Earned Leave (Trainee)': [
+    { name:'Nadia Khalil',        id:'EMP009', days:4  },
+    { name:'Mohammed Al Rashid',  id:'EMP005', days:2  },
+  ],
+};
 
 const SEVERITY = {
   Critical: { rgb:'225,29,72',  light:'#BE123C', dark:'#fda4af' },
@@ -65,8 +106,8 @@ const SEVERITY = {
 };
 
 const LOW_BALANCE = [
-  { name:'Lisa Park',    id:'EMP007', bal:'1 day remaining',  type:'Annual Leave', sev:'Critical' },
-  { name:'James Chen',   id:'EMP004', bal:'2 days remaining', type:'Annual Leave', sev:'Low'      },
+  { name:'Lisa Park',    id:'EMP007', bal:'1 day remaining',  type:'Earned Leave', sev:'Critical' },
+  { name:'James Chen',   id:'EMP004', bal:'2 days remaining', type:'Earned Leave', sev:'Low'      },
   { name:'Nadia Khalil', id:'EMP009', bal:'3 days remaining', type:'Sick Leave',   sev:'Low'      },
 ];
 
@@ -81,8 +122,11 @@ function Avatar({ name, size = 34, color }) {
 const AVATAR_COLORS = ['#2563EB','#E11D48','#D97706','#059669','#7C3AED','#0891B2','#4F46E5'];
 function avatarColor(name) { let h=0; for(let c of name) h=(h*31+c.charCodeAt(0))%AVATAR_COLORS.length; return AVATAR_COLORS[h]; }
 
+const TYPE_KEYS = Object.keys(TYPE_META);
+
 export default function LeaveReports() {
   const [activeTab, setActiveTab] = useState('month');
+  const [activeType, setActiveType] = useState(TYPE_KEYS[0]);
   const { isLight } = useTheme();
 
   return (
@@ -210,6 +254,71 @@ export default function LeaveReports() {
         </div>
       </div>
 
+      {/* Leave taken by employees per type */}
+      <div className="rpt-card g" style={{marginBottom:'16px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'18px',flexWrap:'wrap'}}>
+          <div style={{width:'32px',height:'32px',borderRadius:'10px',background:'linear-gradient(135deg,#4F46E5,#7C3AED)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 3px 12px rgba(79,70,229,.30)'}}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="5" cy="4.5" r="2" fill="white" opacity=".9"/>
+              <path d="M1 13c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".9"/>
+              <circle cx="11.5" cy="4.5" r="2" fill="white" opacity=".6"/>
+              <path d="M9.5 13c0-2.2 1.8-4 4-4" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".6"/>
+            </svg>
+          </div>
+          <div className="sec-lbl" style={{marginBottom:0}}>Leave Taken by Employees</div>
+        </div>
+
+        {/* Type tabs */}
+        <div style={{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'18px'}}>
+          {TYPE_KEYS.map(key => {
+            const on = activeType === key;
+            const m = TYPE_META[key];
+            return (
+              <button key={key} onClick={() => setActiveType(key)} style={{
+                padding:'5px 13px',borderRadius:'20px',fontSize:'11.5px',fontWeight:700,cursor:'pointer',border:'none',fontFamily:'inherit',transition:'all .18s',
+                background: on ? `rgba(${m.rgb},.18)` : isLight ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.07)',
+                color: on ? (isLight ? `rgb(${m.rgb})` : lighten(m.rgb)) : isLight ? 'rgba(60,80,120,.55)' : 'rgba(160,180,220,.55)',
+                border: on ? `1px solid rgba(${m.rgb},.30)` : '1px solid transparent',
+                boxShadow: on ? `0 2px 8px rgba(${m.rgb},.18)` : 'none',
+              }}>
+                <span style={{display:'inline-block',width:'7px',height:'7px',borderRadius:'50%',background:m.color,marginRight:'5px',verticalAlign:'middle'}}/>
+                {key}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Employee rows for selected type */}
+        {(EMPLOYEE_BY_TYPE[activeType] || []).map((emp, i) => {
+          const m = TYPE_META[activeType];
+          const maxDays = EMPLOYEE_BY_TYPE[activeType][0].days;
+          const barPct = Math.round((emp.days / maxDays) * 100);
+          return (
+            <div key={emp.id} style={{display:'flex',alignItems:'center',gap:'12px',padding:'10px 0',borderBottom:`1px solid ${isLight?'rgba(0,0,0,.055)':'rgba(255,255,255,.06)'}`,..( i === (EMPLOYEE_BY_TYPE[activeType].length-1) && {borderBottom:'none'})}}>
+              <div style={{width:'22px',textAlign:'center',fontSize:'11px',fontWeight:700,color:isLight?'rgba(60,80,120,.38)':'rgba(160,180,220,.38)',flexShrink:0}}>
+                {i+1}
+              </div>
+              <Avatar name={emp.name} size={32} color={avatarColor(emp.name)} />
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:'13px',fontWeight:700,color:isLight?'rgba(15,23,42,.82)':'rgba(200,215,255,.88)'}}>
+                  {emp.name}
+                </div>
+                <div style={{fontSize:'11px',color:isLight?'rgba(60,80,120,.42)':'rgba(160,180,220,.44)'}}>{emp.id}</div>
+              </div>
+              <div style={{width:'120px',flexShrink:0}}>
+                <div style={{height:'6px',borderRadius:'3px',background:isLight?'rgba(0,0,0,.07)':'rgba(255,255,255,.09)',overflow:'hidden'}}>
+                  <div style={{height:'100%',width:`${barPct}%`,background:m.bar,borderRadius:'3px',transition:'width .4s'}}/>
+                </div>
+              </div>
+              <div style={{width:'55px',textAlign:'right',flexShrink:0,fontSize:'12px',fontWeight:700,
+                color:isLight?`rgb(${m.rgb})`:lighten(m.rgb)}}>
+                {emp.days} {emp.days === 1 ? 'day' : 'days'}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {/* Low balance alerts */}
       <div className="rpt-card g">
         <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'18px'}}>
@@ -231,7 +340,7 @@ export default function LeaveReports() {
 
         {LOW_BALANCE.map((e) => {
           const sev = SEVERITY[e.sev];
-          const typeMeta = TYPE_META[e.type.replace(' Leave','').trim()] || TYPE_META.Annual;
+          const typeMeta = TYPE_META[e.type] || TYPE_META['Earned Leave'];
           return (
             <div key={e.id} className="low-row">
               <Avatar name={e.name} size={36} color={avatarColor(e.name)} />
