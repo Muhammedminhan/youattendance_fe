@@ -294,7 +294,7 @@ export default function LeaveReports() {
           const maxDays = EMPLOYEE_BY_TYPE[activeType][0].days;
           const barPct = Math.round((emp.days / maxDays) * 100);
           return (
-            <div key={emp.id} style={{display:'flex',alignItems:'center',gap:'12px',padding:'10px 0',borderBottom:`1px solid ${isLight?'rgba(0,0,0,.055)':'rgba(255,255,255,.06)'}`,..( i === (EMPLOYEE_BY_TYPE[activeType].length-1) && {borderBottom:'none'})}}>
+            <div key={emp.id} style={{display:'flex',alignItems:'center',gap:'12px',padding:'10px 0',borderBottom: i === EMPLOYEE_BY_TYPE[activeType].length-1 ? 'none' : `1px solid ${isLight?'rgba(0,0,0,.055)':'rgba(255,255,255,.06)'}`}}>
               <div style={{width:'22px',textAlign:'center',fontSize:'11px',fontWeight:700,color:isLight?'rgba(60,80,120,.38)':'rgba(160,180,220,.38)',flexShrink:0}}>
                 {i+1}
               </div>
