@@ -9,6 +9,33 @@ const SLOT = {
   B: { rgb:'225,29,72',  color:'#E11D48', light:'#BE123C', dark:'#fda4af' },
 };
 
+const LEAVE_TYPES = [
+  { key:'earned',       label:'Earned Leave',        color:'#2563EB', rgb:'37,99,235'   },
+  { key:'sick',         label:'Sick Leave',           color:'#E11D48', rgb:'225,29,72'  },
+  { key:'compensatory', label:'Compensatory Off',     color:'#059669', rgb:'5,150,105'  },
+  { key:'restricted',   label:'Restricted Holiday',   color:'#D97706', rgb:'217,119,6'  },
+  { key:'fop',          label:'FOP',                  color:'#7C3AED', rgb:'124,58,237' },
+];
+
+const MOCK_LEAVE = {
+  EMP001: { earned:{taken:4,total:22},  sick:{taken:2,total:8}, compensatory:{taken:1,total:3}, restricted:{taken:1,total:2}, fop:{taken:0,total:1} },
+  EMP002: { earned:{taken:7,total:22},  sick:{taken:5,total:8}, compensatory:{taken:2,total:4}, restricted:{taken:2,total:2}, fop:{taken:1,total:1} },
+  EMP003: { earned:{taken:10,total:22}, sick:{taken:1,total:8}, compensatory:{taken:0,total:2}, restricted:{taken:0,total:2}, fop:{taken:0,total:1} },
+  EMP004: { earned:{taken:2,total:15},  sick:{taken:3,total:8}, compensatory:{taken:0,total:1}, restricted:{taken:1,total:2}, fop:{taken:0,total:1} },
+  EMP005: { earned:{taken:6,total:22},  sick:{taken:4,total:8}, compensatory:{taken:3,total:5}, restricted:{taken:1,total:2}, fop:{taken:1,total:1} },
+  EMP006: { earned:{taken:8,total:22},  sick:{taken:2,total:8}, compensatory:{taken:1,total:3}, restricted:{taken:2,total:2}, fop:{taken:0,total:1} },
+  EMP007: { earned:{taken:12,total:22}, sick:{taken:6,total:8}, compensatory:{taken:2,total:3}, restricted:{taken:2,total:2}, fop:{taken:1,total:1} },
+  EMP008: { earned:{taken:5,total:22},  sick:{taken:3,total:8}, compensatory:{taken:0,total:2}, restricted:{taken:0,total:2}, fop:{taken:0,total:1} },
+  EMP009: { earned:{taken:9,total:22},  sick:{taken:1,total:8}, compensatory:{taken:4,total:6}, restricted:{taken:1,total:2}, fop:{taken:0,total:1} },
+  EMP010: { earned:{taken:3,total:15},  sick:{taken:4,total:8}, compensatory:{taken:0,total:1}, restricted:{taken:2,total:2}, fop:{taken:0,total:1} },
+  EMP011: { earned:{taken:11,total:22}, sick:{taken:5,total:8}, compensatory:{taken:2,total:4}, restricted:{taken:1,total:2}, fop:{taken:1,total:1} },
+  EMP012: { earned:{taken:22,total:22}, sick:{taken:8,total:8}, compensatory:{taken:3,total:3}, restricted:{taken:2,total:2}, fop:{taken:1,total:1} },
+};
+
+function getLeave(empId) {
+  return MOCK_LEAVE[empId] || { earned:{taken:5,total:22}, sick:{taken:2,total:8}, compensatory:{taken:1,total:3}, restricted:{taken:1,total:2}, fop:{taken:0,total:1} };
+}
+
 const STATUS_META = {
   Active:          { rgb:'5,150,105',  lc:'#047857', dc:'#6ee7b7' },
   Probation:       { rgb:'217,119,6',  lc:'#B45309', dc:'#fcd34d' },
@@ -219,25 +246,97 @@ export default function Compare() {
         </div>
       </div>
 
-      {/* Leave data placeholder */}
-      <div className="g" style={{borderRadius:'18px',padding:'32px',textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:'12px'}}>
-        <div style={{width:'48px',height:'48px',borderRadius:'14px',background:isLight?'rgba(37,99,235,.08)':'rgba(37,99,235,.12)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-            <rect x="2" y="5" width="18" height="15" rx="3" stroke={isLight?'#2563EB':'#93c5fd'} strokeWidth="1.5" fill="none"/>
-            <path d="M2 10h18" stroke={isLight?'#2563EB':'#93c5fd'} strokeWidth="1.2" opacity=".5"/>
-            <line x1="7" y1="3" x2="7" y2="7" stroke={isLight?'#2563EB':'#93c5fd'} strokeWidth="2" strokeLinecap="round"/>
-            <line x1="15" y1="3" x2="15" y2="7" stroke={isLight?'#2563EB':'#93c5fd'} strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </div>
-        <div>
-          <div style={{fontSize:'14px',fontWeight:700,color:isLight?'rgba(15,23,42,.75)':'rgba(220,230,255,.80)',marginBottom:'5px'}}>
-            Leave Comparison Coming Soon
+      {/* Leave balance comparison */}
+      {(() => {
+        const leaveA = getLeave(a.employee_id);
+        const leaveB = getLeave(b.employee_id);
+        const totalTakenA = LEAVE_TYPES.reduce((s, lt) => s + (leaveA[lt.key]?.taken || 0), 0);
+        const totalTakenB = LEAVE_TYPES.reduce((s, lt) => s + (leaveB[lt.key]?.taken || 0), 0);
+        const divider = `1px solid ${isLight?'rgba(0,0,0,.05)':'rgba(255,255,255,.06)'}`;
+        const midBg   = isLight?'rgba(0,0,0,.025)':'rgba(0,0,0,.12)';
+        const midClr  = isLight?'rgba(71,85,105,.50)':'rgba(160,180,220,.42)';
+        return (
+          <div className="g" style={{borderRadius:'18px',overflow:'hidden',padding:0}}>
+            {/* Section header */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 160px 1fr',background:isLight?'rgba(0,0,0,.03)':'rgba(0,0,0,.18)',borderBottom:divider}}>
+              <div style={{padding:'12px 20px',textAlign:'right',fontSize:'12px',fontWeight:800,color:isLight?SLOT.A.light:SLOT.A.dark}}>
+                {a.employee_name}
+              </div>
+              <div style={{padding:'12px 8px',textAlign:'center',fontSize:'10px',fontWeight:700,color:midClr,textTransform:'uppercase',letterSpacing:'.08em',background:midBg}}>
+                Leave Balance
+              </div>
+              <div style={{padding:'12px 20px',textAlign:'left',fontSize:'12px',fontWeight:800,color:isLight?SLOT.B.light:SLOT.B.dark}}>
+                {b.employee_name}
+              </div>
+            </div>
+
+            {/* Total taken summary */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 160px 1fr',borderBottom:divider,background:isLight?'rgba(37,99,235,.03)':'rgba(37,99,235,.06)'}}>
+              <div style={{padding:'16px 20px',textAlign:'right'}}>
+                <div style={{fontSize:'26px',fontWeight:900,letterSpacing:'-.03em',color:isLight?SLOT.A.light:SLOT.A.dark}}>{totalTakenA}</div>
+                <div style={{fontSize:'11px',fontWeight:600,color:isLight?'rgba(60,80,120,.52)':'rgba(160,185,230,.48)',marginTop:'2px'}}>days taken this year</div>
+              </div>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'center',fontSize:'10px',fontWeight:700,color:midClr,textTransform:'uppercase',letterSpacing:'.07em',background:midBg,padding:'0 6px',textAlign:'center'}}>
+                Total Taken
+              </div>
+              <div style={{padding:'16px 20px'}}>
+                <div style={{fontSize:'26px',fontWeight:900,letterSpacing:'-.03em',color:isLight?SLOT.B.light:SLOT.B.dark}}>{totalTakenB}</div>
+                <div style={{fontSize:'11px',fontWeight:600,color:isLight?'rgba(60,80,120,.52)':'rgba(160,185,230,.48)',marginTop:'2px'}}>days taken this year</div>
+              </div>
+            </div>
+
+            {/* Per leave-type rows */}
+            {LEAVE_TYPES.map((lt, i) => {
+              const da = leaveA[lt.key] || { taken:0, total:0 };
+              const db = leaveB[lt.key] || { taken:0, total:0 };
+              const balA = da.total - da.taken;
+              const balB = db.total - db.taken;
+              const pctA = da.total > 0 ? (da.taken / da.total) * 100 : 0;
+              const pctB = db.total > 0 ? (db.taken / db.total) * 100 : 0;
+              const isLast = i === LEAVE_TYPES.length - 1;
+              return (
+                <div key={lt.key} style={{display:'grid',gridTemplateColumns:'1fr 160px 1fr',borderBottom:isLast?'none':divider}}>
+                  {/* Employee A */}
+                  <div style={{padding:'14px 20px',textAlign:'right'}}>
+                    <div style={{display:'flex',alignItems:'baseline',gap:'5px',justifyContent:'flex-end'}}>
+                      <span style={{fontSize:'18px',fontWeight:800,letterSpacing:'-.02em',color:isLight?'rgba(15,23,42,.88)':'rgba(220,230,255,.90)'}}>{balA}</span>
+                      <span style={{fontSize:'11px',fontWeight:600,color:isLight?'rgba(71,85,105,.50)':'rgba(160,185,230,.45)'}}>left</span>
+                    </div>
+                    <div style={{fontSize:'11px',color:isLight?'rgba(71,85,105,.45)':'rgba(160,185,230,.40)',marginTop:'2px'}}>
+                      {da.taken} taken / {da.total} total
+                    </div>
+                    <div style={{height:'4px',borderRadius:'2px',background:`rgba(${lt.rgb},.12)`,marginTop:'7px',overflow:'hidden'}}>
+                      <div style={{height:'100%',width:`${pctA}%`,background:lt.color,borderRadius:'2px',marginLeft:'auto',transition:'width .5s ease'}}/>
+                    </div>
+                  </div>
+                  {/* Center label */}
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'center',background:midBg,padding:'0 8px'}}>
+                    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'5px'}}>
+                      <div style={{width:'8px',height:'8px',borderRadius:'50%',background:lt.color,flexShrink:0}}/>
+                      <div style={{fontSize:'10px',fontWeight:700,color:midClr,textTransform:'uppercase',letterSpacing:'.05em',textAlign:'center',lineHeight:1.3}}>
+                        {lt.label}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Employee B */}
+                  <div style={{padding:'14px 20px'}}>
+                    <div style={{display:'flex',alignItems:'baseline',gap:'5px'}}>
+                      <span style={{fontSize:'18px',fontWeight:800,letterSpacing:'-.02em',color:isLight?'rgba(15,23,42,.88)':'rgba(220,230,255,.90)'}}>{balB}</span>
+                      <span style={{fontSize:'11px',fontWeight:600,color:isLight?'rgba(71,85,105,.50)':'rgba(160,185,230,.45)'}}>left</span>
+                    </div>
+                    <div style={{fontSize:'11px',color:isLight?'rgba(71,85,105,.45)':'rgba(160,185,230,.40)',marginTop:'2px'}}>
+                      {db.taken} taken / {db.total} total
+                    </div>
+                    <div style={{height:'4px',borderRadius:'2px',background:`rgba(${lt.rgb},.12)`,marginTop:'7px',overflow:'hidden'}}>
+                      <div style={{height:'100%',width:`${pctB}%`,background:lt.color,borderRadius:'2px',transition:'width .5s ease'}}/>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div style={{fontSize:'12px',color:isLight?'rgba(60,80,120,.48)':'rgba(160,180,230,.45)',lineHeight:1.6,maxWidth:'360px'}}>
-            Side-by-side leave balance, usage trends, and history will appear here once leave tracking is configured.
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Change employee modal */}
       {modalOpen && (

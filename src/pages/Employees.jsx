@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import BackButton from '../components/BackButton';
-import { listEmployees } from '../api/employees';
+import { getCachedEmployees } from '../api/employeeCache';
 
 function statusKey(status) {
   const s = (status || '').toLowerCase();
@@ -58,23 +58,32 @@ export default function Employees() {
   const [employees, setEmployees]       = useState([]);
   const [loading, setLoading]           = useState(true);
   const [apiError, setApiError]         = useState('');
+  const [compareSet, setCompareSet]     = useState(new Set());
   const { isLight } = useTheme();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    listEmployees()
+    getCachedEmployees()
       .then(data => { if (!cancelled) { setEmployees(data); setLoading(false); } })
       .catch(err => {
         if (!cancelled) {
-          // Network error (no backend) → show empty state, not a red error
-          if (!err.response) { setLoading(false); return; }
           setApiError(err.response?.data?.errors?.message || 'Failed to load employees');
           setLoading(false);
         }
       });
     return () => { cancelled = true; };
   }, []);
+
+  function toggleCompare(empId) {
+    setCompareSet(prev => {
+      const next = new Set(prev);
+      if (next.has(empId)) next.delete(empId);
+      else if (next.size < 2) next.add(empId);
+      return next;
+    });
+  }
 
   const sorted = useMemo(() => {
     let list = employees.map((e, i) => toCard(e, i));
@@ -93,12 +102,15 @@ export default function Employees() {
     );
   }, [sorted, search]);
 
+  const compareIds  = [...compareSet];
+  const compareEmps = compareIds.map(id => sorted.find(e => e.id === id)).filter(Boolean);
+
   return (
     <main className="main">
       <style>{`
-        .emp-card{border-radius:18px;padding:20px;text-decoration:none;color:inherit;display:block;
+        .emp-card{border-radius:18px;padding:20px;color:inherit;display:block;
           transition:transform .20s cubic-bezier(.34,1.2,.64,1),box-shadow .20s ease,border-left-color .20s;
-          border-left:3px solid transparent}
+          border-left:3px solid transparent;cursor:pointer;position:relative;user-select:none}
         .emp-card:hover{transform:translateY(-4px)}
 
         .emp-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
@@ -109,15 +121,15 @@ export default function Employees() {
 
         .status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
 
-        .leave-bar-wrap{margin-top:12px}
-        .leave-bar-label{display:flex;justify-content:space-between;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
-        .leave-bar-bg{height:6px;border-radius:3px;overflow:hidden}
-        .leave-bar{height:100%;border-radius:3px;transition:width .4s ease}
-
         .emp-footer{margin-top:14px;padding-top:12px;font-size:11px;font-weight:700;
-          display:flex;justify-content:flex-end;align-items:center;gap:5px;
+          display:flex;justify-content:space-between;align-items:center;gap:5px;
           transition:gap .18s cubic-bezier(.34,1.2,.64,1)}
-        .emp-card:hover .emp-footer{gap:9px}
+
+        .view-link{display:flex;align-items:center;gap:5px;transition:gap .18s cubic-bezier(.34,1.2,.64,1)}
+        .emp-card:hover .view-link{gap:9px}
+
+        .cmp-check{width:28px;height:28px;border-radius:9px;border:1.5px solid;display:flex;align-items:center;
+          justify-content:center;cursor:pointer;transition:all .18s;flex-shrink:0;font-family:inherit;padding:0}
 
         .sort-wrap{position:relative;display:inline-block;margin-bottom:20px}
         .sort-trigger{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .18s;white-space:nowrap;backdrop-filter:blur(8px)}
@@ -130,6 +142,12 @@ export default function Employees() {
         .search-field{position:relative;display:flex;align-items:center}
         .search-ico{position:absolute;left:11px;pointer-events:none;opacity:.40}
         @keyframes spin{to{transform:rotate(360deg)}}
+
+        .cmp-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:400;
+          display:flex;align-items:center;gap:12px;padding:13px 18px;border-radius:20px;
+          box-shadow:0 8px 40px rgba(0,0,0,.50);backdrop-filter:blur(24px);
+          animation:slideUp .25s cubic-bezier(.34,1.2,.64,1)}
+        @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
       `}</style>
 
       {/* Header */}
@@ -240,11 +258,16 @@ export default function Employees() {
         <div className="card-grid" id="grid">
           {filtered.map(emp => {
             const sm = emp.statusMeta;
+            const inCompare = compareSet.has(emp.id);
+            const maxReached = compareSet.size >= 2 && !inCompare;
             return (
-              <Link key={emp.id} className={`emp-card g status-${emp.statusKey}`} to={`/employees/${emp.id}`}
-                style={{borderLeftColor:'transparent'}}
-                onMouseEnter={e => e.currentTarget.style.borderLeftColor = sm.ring}
-                onMouseLeave={e => e.currentTarget.style.borderLeftColor = 'transparent'}
+              <div
+                key={emp.id}
+                className={`emp-card g status-${emp.statusKey}`}
+                onClick={() => navigate(`/employees/${emp.id}`)}
+                style={{borderLeftColor: inCompare ? sm.ring : 'transparent'}}
+                onMouseEnter={e => !inCompare && (e.currentTarget.style.borderLeftColor = sm.ring)}
+                onMouseLeave={e => !inCompare && (e.currentTarget.style.borderLeftColor = 'transparent')}
               >
                 <div className="emp-top">
                   <div className="emp-avatar" style={{
@@ -253,7 +276,7 @@ export default function Employees() {
                   }}>
                     {(emp.name[0] || '?').toUpperCase()}
                   </div>
-                  <div>
+                  <div style={{flex:1,minWidth:0}}>
                     <div className="emp-name" style={{color:isLight?'rgba(15,23,42,.88)':'rgba(220,230,255,.92)'}}>{emp.name}</div>
                     <div className="emp-id" style={{color:isLight?'rgba(71,85,105,.50)':'rgba(180,200,240,.40)'}}>{emp.id}</div>
                     <div className="emp-dept" style={{color:isLight?'rgba(71,85,105,.55)':'rgba(160,180,240,.55)'}}>
@@ -282,15 +305,47 @@ export default function Employees() {
 
                 <div className="emp-footer" style={{
                   borderTop:`1px solid ${isLight?'rgba(0,0,0,.07)':'rgba(255,255,255,.07)'}`,
-                  color:isLight?'#2563EB':'#93c5fd',
                 }}>
-                  View Profile
-                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                    <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                    <polyline points="8,3 12,7 8,11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  <div className="view-link" style={{color:isLight?'#2563EB':'#93c5fd'}}>
+                    View Profile
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                      <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                      <polyline points="8,3 12,7 8,11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+
+                  {/* Compare toggle */}
+                  <button
+                    onClick={e => { e.stopPropagation(); if (!maxReached) toggleCompare(emp.id); }}
+                    title={maxReached ? 'Select max 2 employees' : inCompare ? 'Remove from compare' : 'Add to compare'}
+                    className="cmp-check"
+                    style={{
+                      background: inCompare
+                        ? `rgba(${sm.rgb},${isLight?'.12':'.20'})`
+                        : isLight?'rgba(255,255,255,.70)':'rgba(255,255,255,.06)',
+                      borderColor: inCompare
+                        ? `rgba(${sm.rgb},.45)`
+                        : isLight?'rgba(180,190,220,.40)':'rgba(255,255,255,.12)',
+                      color: inCompare
+                        ? (isLight?sm.lightText:sm.darkText)
+                        : isLight?'rgba(80,100,150,.45)':'rgba(160,185,230,.35)',
+                      opacity: maxReached ? 0.35 : 1,
+                      cursor: maxReached ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {inCompare ? (
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <polyline points="2,6.5 5,9.5 11,3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    ) : (
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <line x1="6.5" y1="2" x2="6.5" y2="11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                        <line x1="2" y1="6.5" x2="11" y2="6.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                      </svg>
+                    )}
+                  </button>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
@@ -306,6 +361,61 @@ export default function Employees() {
           </div>
           <div className="empty-title">No employees found</div>
           <div className="empty-sub">Try a different name or ID</div>
+        </div>
+      )}
+
+      {/* Floating compare bar */}
+      {compareSet.size > 0 && (
+        <div className="cmp-bar" style={{
+          background: isLight?'rgba(255,255,255,.96)':'rgba(13,17,27,.95)',
+          border: isLight?'1px solid rgba(200,210,240,.65)':'1px solid rgba(255,255,255,.13)',
+        }}>
+          {compareSet.size === 1 ? (
+            <div style={{fontSize:'12px',fontWeight:600,color:isLight?'rgba(30,40,80,.70)':'rgba(180,200,240,.65)'}}>
+              <span style={{fontWeight:800,color:isLight?'rgba(15,23,42,.88)':'rgba(220,230,255,.92)'}}>{compareEmps[0]?.name}</span>
+              {' '}selected — pick one more to compare
+            </div>
+          ) : (
+            <>
+              <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                <div style={{width:'28px',height:'28px',borderRadius:'9px',background:compareEmps[0]?.color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:800,color:'#fff',flexShrink:0}}>
+                  {(compareEmps[0]?.name[0]||'?').toUpperCase()}
+                </div>
+                <div style={{fontSize:'12px',fontWeight:800,color:isLight?'rgba(15,23,42,.88)':'rgba(220,230,255,.92)'}}>
+                  {compareEmps[0]?.name}
+                </div>
+              </div>
+              <div style={{fontSize:'11px',color:isLight?'rgba(71,85,105,.50)':'rgba(160,180,220,.45)',fontWeight:600}}>vs</div>
+              <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                <div style={{width:'28px',height:'28px',borderRadius:'9px',background:compareEmps[1]?.color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:800,color:'#fff',flexShrink:0}}>
+                  {(compareEmps[1]?.name[0]||'?').toUpperCase()}
+                </div>
+                <div style={{fontSize:'12px',fontWeight:800,color:isLight?'rgba(15,23,42,.88)':'rgba(220,230,255,.92)'}}>
+                  {compareEmps[1]?.name}
+                </div>
+              </div>
+              <button
+                onClick={() => navigate(`/compare?emp1=${compareIds[0]}&emp2=${compareIds[1]}`)}
+                style={{padding:'8px 18px',borderRadius:'11px',fontSize:'12px',fontWeight:700,fontFamily:'inherit',cursor:'pointer',border:'none',
+                  background:'linear-gradient(135deg,#2563EB,#1E40AF)',color:'#fff',
+                  boxShadow:'0 3px 12px rgba(37,99,235,.40)',transition:'box-shadow .18s,transform .18s',whiteSpace:'nowrap'}}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow='0 5px 18px rgba(37,99,235,.55)'; e.currentTarget.style.transform='translateY(-1px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow='0 3px 12px rgba(37,99,235,.40)'; e.currentTarget.style.transform=''; }}
+              >
+                Compare →
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => setCompareSet(new Set())}
+            style={{width:'28px',height:'28px',borderRadius:'9px',fontSize:'16px',display:'flex',alignItems:'center',justifyContent:'center',
+              cursor:'pointer',fontFamily:'inherit',flexShrink:0,lineHeight:1,
+              background:'transparent',
+              border:isLight?'1px solid rgba(0,0,0,.10)':'1px solid rgba(255,255,255,.12)',
+              color:isLight?'rgba(71,85,105,.55)':'rgba(160,180,220,.50)'}}
+          >
+            ×
+          </button>
         </div>
       )}
     </main>

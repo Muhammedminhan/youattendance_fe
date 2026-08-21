@@ -195,18 +195,16 @@ export default function Login() {
           {/* Left branding */}
           <div className="lw-left">
             <div>
-              <div className="lp-mark">
-                <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-                  <text x="2" y="11" fontFamily="Inter,Arial,sans-serif" fontWeight="900" fontSize="9.5" fill="#ffffff" letterSpacing="-0.3">YOU</text>
-                  <polyline points="2,18 5.5,22 12,15" stroke="#ffffff" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                  <circle cx="17" cy="17.5" r="1.5" fill="rgba(255,255,255,.9)"/>
-                  <circle cx="22" cy="17.5" r="1.5" fill="rgba(255,255,255,.9)"/>
-                  <circle cx="17" cy="22.5" r="1.5" fill="rgba(255,255,255,.9)"/>
-                  <circle cx="22" cy="22.5" r="1.5" fill="rgba(255,255,255,.9)"/>
+              <div className="lp-mark" style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6)',boxShadow:'0 4px 18px rgba(99,102,241,.45)'}}>
+                <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
+                  <circle cx="7" cy="6" r="2.5" fill="white" opacity=".95"/>
+                  <path d="M2 16c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="white" strokeWidth="1.6" strokeLinecap="round" fill="none" opacity=".95"/>
+                  <circle cx="14" cy="6.5" r="2" fill="white" opacity=".60"/>
+                  <path d="M12 16c0-2.21 1.12-4.14 2.8-5.28" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".60"/>
                 </svg>
               </div>
-              <div className="lp-name"><span>YOU</span>Attendance</div>
-              <div className="lp-tagline">HR Leave Management Dashboard</div>
+              <div className="lp-name" style={{letterSpacing:'-.05em'}}>HRM</div>
+              <div className="lp-tagline">HR Dashboard</div>
             </div>
 
             <div className="lp-features">
@@ -223,7 +221,7 @@ export default function Login() {
               ))}
             </div>
 
-            <div className="lp-footer">© 2026 YOUAttendance · HR Intelligence Platform</div>
+            <div className="lp-footer">© 2026 HRM · HR Intelligence Platform</div>
           </div>
 
           {/* Right sign-in */}

@@ -24,7 +24,6 @@ export function AuthProvider({ children }) {
     // Ask the server to clear the httpOnly yd_token cookie (fire and forget)
     api.post('/v1/auth/logout/').catch(() => {});
     localStorage.removeItem('yd-user');
-    localStorage.removeItem('yd-custom-picture');
     if (window.google?.accounts?.id) {
       window.google.accounts.id.disableAutoSelect();
       if (user?.email) {
