@@ -94,19 +94,21 @@ function StatCard({ label, val, color, hint, trend, trendUp, icon, pct, pctLabel
 }
 
 const DONUT_DATA = [
-  { label:'Annual',    pct:45, color:'#2563EB', rgb:'37,99,235'    },
-  { label:'Sick',      pct:22, color:'#E11D48', rgb:'225,29,72'    },
-  { label:'Emergency', pct:11, color:'#D97706', rgb:'217,119,6'    },
-  { label:'WFH',       pct:14, color:'#059669', rgb:'5,150,105'    },
-  { label:'Unpaid',    pct:8,  color:'#7C3AED', rgb:'124,58,237'   },
+  { label:'Earned Leave',          pct:40, color:'#2563EB', rgb:'37,99,235'    },
+  { label:'Sick Leave',            pct:20, color:'#E11D48', rgb:'225,29,72'    },
+  { label:'Compensatory Off',      pct:15, color:'#059669', rgb:'5,150,105'    },
+  { label:'Restricted Holiday',    pct:12, color:'#D97706', rgb:'217,119,6'    },
+  { label:'FOP',                   pct:8,  color:'#7C3AED', rgb:'124,58,237'   },
+  { label:'Earned Leave (Trainee)',pct:5,  color:'#0891B2', rgb:'8,145,178'    },
 ];
 
 const LEAVE_TYPE_COLOR = {
-  'Annual Leave':{ color:'#2563EB', rgb:'37,99,235'  },
-  'Sick Leave':  { color:'#E11D48', rgb:'225,29,72'  },
-  'Emergency':   { color:'#D97706', rgb:'217,119,6'  },
-  'WFH':         { color:'#059669', rgb:'5,150,105'  },
-  'Unpaid':      { color:'#7C3AED', rgb:'124,58,237' },
+  'Earned Leave':           { color:'#2563EB', rgb:'37,99,235'  },
+  'Sick Leave':             { color:'#E11D48', rgb:'225,29,72'  },
+  'Compensatory Off':       { color:'#059669', rgb:'5,150,105'  },
+  'Restricted Holiday':     { color:'#D97706', rgb:'217,119,6'  },
+  'FOP':                    { color:'#7C3AED', rgb:'124,58,237' },
+  'Earned Leave (Trainee)': { color:'#0891B2', rgb:'8,145,178'  },
 };
 const AVATAR_COLORS = ['#2563EB','#E11D48','#D97706','#059669','#7C3AED','#0891B2','#4F46E5'];
 function avatarBg(name) {
