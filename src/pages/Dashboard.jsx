@@ -441,23 +441,8 @@ export default function Dashboard() {
 
           <div style={{position:'relative',zIndex:1,display:'flex',alignItems:'center',justifyContent:'space-between',gap:'20px',padding:'22px 28px',flexWrap:'wrap'}}>
 
-            {/* Left: logo + greeting */}
+            {/* Left: greeting */}
             <div style={{display:'flex',alignItems:'center',gap:'20px'}}>
-              {/* Logo badge with pulse */}
-              <div style={{position:'relative',flexShrink:0}}>
-                <div style={{width:'64px',height:'64px',borderRadius:'20px',background:'linear-gradient(145deg,#1D4ED8,#4F46E5,#7C3AED)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 28px rgba(37,99,235,.42),0 2px 0 rgba(255,255,255,.22) inset'}}>
-                  <svg width="40" height="40" viewBox="0 0 36 36" fill="none">
-                    <text x="2" y="22" fontFamily="Inter,Arial,sans-serif" fontWeight="900" fontSize="13" fill="#ffffff">YOU</text>
-                    <polyline points="6,27 11,32 20,22" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                    <circle cx="25" cy="24" r="1.5" fill="rgba(255,255,255,.70)"/>
-                    <circle cx="30" cy="24" r="1.5" fill="rgba(255,255,255,.70)"/>
-                    <circle cx="25" cy="29" r="1.5" fill="rgba(255,255,255,.70)"/>
-                    <circle cx="30" cy="29" r="1.5" fill="rgba(255,255,255,.70)"/>
-                  </svg>
-                </div>
-                <div className="live-dot" style={{position:'absolute',bottom:'-4px',right:'-4px',width:'18px',height:'18px',borderRadius:'50%',background:'linear-gradient(135deg,#059669,#10b981)',border:'3px solid white'}} />
-              </div>
-
               {/* Greeting text */}
               <div>
                 <div style={{fontSize:'28px',fontWeight:900,letterSpacing:'-.04em',lineHeight:1.1}}>
