@@ -25,9 +25,19 @@ export default function Sidebar() {
           WebkitBackdropFilter:'blur(12px)',
           marginBottom:'4px',
         }}>
-          <div>
-            <div className="sb-logo-text">HRM</div>
-            <div className="sb-logo-sub">HR Dashboard</div>
+          <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+            <div style={{width:'36px',height:'36px',borderRadius:'10px',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 4px 12px rgba(99,102,241,.40)'}}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="7" cy="6" r="2.5" fill="white" opacity=".95"/>
+                <path d="M2 16c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="white" strokeWidth="1.6" strokeLinecap="round" fill="none" opacity=".95"/>
+                <circle cx="14" cy="6.5" r="2" fill="white" opacity=".60"/>
+                <path d="M12 16c0-2.21 1.12-4.14 2.8-5.28" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity=".60"/>
+              </svg>
+            </div>
+            <div>
+              <div className="sb-logo-text" style={{fontSize:'15px',fontWeight:800,letterSpacing:'-.02em'}}>HRM</div>
+              <div className="sb-logo-sub">HR Dashboard</div>
+            </div>
           </div>
         </div>
 
