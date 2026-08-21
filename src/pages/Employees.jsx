@@ -67,7 +67,9 @@ export default function Employees() {
       .then(data => { if (!cancelled) { setEmployees(data); setLoading(false); } })
       .catch(err => {
         if (!cancelled) {
-          setApiError(err.response?.data?.errors?.message || err.message || 'Failed to load employees');
+          // Network error (no backend) → show empty state, not a red error
+          if (!err.response) { setLoading(false); return; }
+          setApiError(err.response?.data?.errors?.message || 'Failed to load employees');
           setLoading(false);
         }
       });
